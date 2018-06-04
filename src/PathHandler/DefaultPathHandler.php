@@ -39,11 +39,6 @@ class DefaultPathHandler implements HandlesPath
         return $parsedPath;
     }
 
-    public function nullableFields()
-    {
-        return array();
-    }
-
     public function setSchema($schema)
     {
         $this->schema = $schema;
