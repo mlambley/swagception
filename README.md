@@ -28,7 +28,7 @@ How then do we generate an actual url using real entity ids which will produce a
 By default, this library will do this using the `enum` and `x-example` fields. However, it is more useful to be able to specify your own ids.
 You can create a handler for each entity. Use annotations to link them to one or more paths. Then, all you need to do is tell the system where to find them.
 
-```
+```php
 namespace My\API\PathHandlers
 
 /**
@@ -69,7 +69,7 @@ class MyPathHandler implements \Swagception\PathHandler\HandlesPath
 ## Cest structure
 Now that you have some real data at your disposal, it's time to link it all together in your Codeception cest.
 The recommended way is to feed the paths (end points) into a cest data provider. Your terminal will then output a line for each path.
-```
+```php
 class MyCest
 {
     protected $swaggerSchema;
@@ -150,7 +150,7 @@ class MyCest
 ```
 
 Alternatively, you can loop through them in a single function.
-```
+```php
 public function paths(MyTester $I, \Codeception\Scenario $S)
 {
     foreach ($this->schema->paths as $path => $pathData) {
@@ -172,4 +172,3 @@ Show your support by starring me at [Github](https://github.com/mlambley/swagcep
 ## Did this library not work for you?
 Log me a [github issue](https://github.com/mlambley/swagception/issues) detailing why it didn't work for you.
 It could be that a small change will make a big difference.
-
