@@ -1,7 +1,7 @@
 <?php
 namespace Swagception;
 
-use JsonSchema\RefResolver;
+use JsonSchema\SchemaStorage;
 use JsonSchema\Uri\UriRetriever;
 use JsonSchema\Uri\UriResolver;
 
@@ -269,8 +269,8 @@ class SwaggerSchema
      */
     protected function loadSchemaFromURI($specURI)
     {
-        $refResolver = new RefResolver(new UriRetriever(), new UriResolver());
-        return $refResolver->resolve($specURI);
+        $refResolver = new SchemaStorage(new UriRetriever(), new UriResolver());
+        return $refResolver->resolveRef($specURI);
     }
 
     public function getURLRetriever()
