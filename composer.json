@@ -1,0 +1,23 @@
+{
+    "name": "mlambley/swagception",
+    "description": "Validate your API against Swagger 2.0 using Codeception",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mark Lambley",
+            "email": "mlambley@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Swagception\\": "src/"
+        }
+    },
+    "require": {
+        "codeception/codeception": "^2.4",
+        "zeptech/annotations": "^1.1",
+        "justinrainbow/json-schema": "^5.2",
+        "guzzlehttp/guzzle": "^6.3"
+    }
+}
