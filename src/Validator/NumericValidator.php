@@ -23,7 +23,7 @@ class NumericValidator extends NumberBase implements CanValidate
         }
 
         //Check that the data is a number.
-        if (!is_numeric($json)) {
+        if (!$this->isNumeric($json)) {
             throw new Exception\ValidationException(sprintf('%1$s is not a number.', $context));
         }
 

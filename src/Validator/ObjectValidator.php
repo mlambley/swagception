@@ -86,7 +86,7 @@ class ObjectValidator implements CanValidate
             }
         } else if (is_object($schema->additionalProperties)) {
             //If it's an empty object, we also allow all additional properties
-            if (!empty($schema->additionalProperties)) {
+            if (!empty(get_object_vars($schema->additionalProperties))) {
                 //Fetch additional properties - ones not specified in properties.
                 if (isset($schema->properties) && is_object($schema->properties)) {
                     $extraProperties = array_diff_key(get_object_vars($json), get_object_vars($schema->properties));

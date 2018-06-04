@@ -27,10 +27,10 @@ class NumberBase
     {
         //The value of "multipleOf" MUST be a JSON number.  This number MUST be strictly greater than 0.
         //A numeric instance is valid against "multipleOf" if the result of the division of the instance by this keyword's value is an integer.
-        if (!is_numeric($schema->multipleOf) || !$schema->multipleOf > 0){
+        if (!$this->isNumeric($schema->multipleOf) || !$schema->multipleOf > 0) {
             throw new Exception\ValidationException(sprintf('%1$s has an invalid multipleOf parameter. Must be greater than 0.', $context));
         } else if (((int)($json / $schema->multipleOf)) != $json / $schema->multipleOf) {
-            throw new Exception\ValidationException(sprintf('%1$s is not a multiple of %2$s.', $schema->multipleOf));
+            throw new Exception\ValidationException(sprintf('%1$s is not a multiple of %2$s.', $context, $schema->multipleOf));
         }
     }
 
@@ -82,5 +82,11 @@ class NumberBase
                 throw new Exception\ValidationException(sprintf('%1$s must be greater than or equal to %2$s.', $context, $schema->minimum));
             }
         }
+    }
+    
+    protected function isNumeric($val)
+    {
+        //Can't just use is_numeric because that matches strings.
+        return is_int($val) || is_float($val);
     }
 }

@@ -19,5 +19,8 @@
         "zeptech/annotations": "^1.1",
         "justinrainbow/json-schema": "^5.2",
         "guzzlehttp/guzzle": "^6.3"
+    },
+    "require-dev": {
+        "codeception/aspect-mock": "^3.0"
     }
 }

@@ -73,7 +73,7 @@ class ArrayValidator implements CanValidate
     }
 
     protected function isArray($arr) {
-        return is_array($arr) && (empty($arr) || is_numeric(key($arr)));
+        return is_array($arr) && (empty($arr) || is_int(key($arr)));
     }
 }
 
