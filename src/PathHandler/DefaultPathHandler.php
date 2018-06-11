@@ -23,7 +23,7 @@ class DefaultPathHandler implements HandlesPath
             if (isset($param->{'x-example'})) {
                 //Use the example, if present.
                 $paramValues[$param->name] = $param->{'x-example'};
-            } else if (isset($param->enum)) {
+            } elseif (isset($param->enum)) {
                 //Pick a random enum, if present.
                 $paramValues[$param->name] = $param->enum[mt_rand(0, count($param->enum) - 1)];
             } else {

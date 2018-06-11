@@ -21,6 +21,10 @@
         "guzzlehttp/guzzle": "^6.3"
     },
     "require-dev": {
-        "codeception/aspect-mock": "^3.0"
+        "codeception/aspect-mock": "^3.0",
+        "friendsofphp/php-cs-fixer": "^2.12"
+    },
+    "scripts": {
+        "lint": "php ./vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix ."
     }
 }

@@ -29,7 +29,7 @@ class NumberBase
         //A numeric instance is valid against "multipleOf" if the result of the division of the instance by this keyword's value is an integer.
         if (!$this->isNumeric($schema->multipleOf) || !$schema->multipleOf > 0) {
             throw new Exception\ValidationException(sprintf('%1$s has an invalid multipleOf parameter. Must be greater than 0.', $context));
-        } else if (((int)($json / $schema->multipleOf)) != $json / $schema->multipleOf) {
+        } elseif (((int)($json / $schema->multipleOf)) != $json / $schema->multipleOf) {
             throw new Exception\ValidationException(sprintf('%1$s is not a multiple of %2$s.', $context, $schema->multipleOf));
         }
     }

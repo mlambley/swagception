@@ -39,7 +39,7 @@ class IntegerValidator extends NumberBase implements CanValidate
         }
 
         if ($json > 2147483647 || $json < -2147483648) {
-             throw new Exception\ValidationException(sprintf('%1$s is not a 32-bit integer (between -2147483648 and 2147483647).', $context));
+            throw new Exception\ValidationException(sprintf('%1$s is not a 32-bit integer (between -2147483648 and 2147483647).', $context));
         }
     }
 
@@ -64,7 +64,7 @@ class IntegerValidator extends NumberBase implements CanValidate
 
         //Assuming that at some stage there are ints greater than 64bit, do a regular comparison.
         if ($json > $maxInt64 || $json < $minInt64) {
-             throw new Exception\ValidationException($error64);
+            throw new Exception\ValidationException($error64);
         }
     }
 }

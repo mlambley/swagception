@@ -56,7 +56,7 @@ class Validator implements CanValidate
             if (($json === null) || (is_object($json) && empty(get_object_vars($json)))) {
                 return false;
             }
-        } else if ($json === null) {
+        } elseif ($json === null) {
             //If nullable is not specified, only allow if type is null.
             if (!isset($schema->type) || $schema->type !== 'null') {
                 throw new Exception\ValidationException(sprintf('%1$s is null. Set type:null or nullable:true to allow null fields.', $context));
@@ -165,7 +165,7 @@ class Validator implements CanValidate
                 $context,
                 implode('", "', $errors)
             ));
-        } else if ($passCount === 0) {
+        } elseif ($passCount === 0) {
             throw new Exception\ValidationException(sprintf('%1$s did not match one of the specified \'oneOf\' schemas. Error messages are "%2$s"', $context, implode('", "', $errors)));
         }
     }

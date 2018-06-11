@@ -80,8 +80,4 @@ class URLRetriever implements CanRetrieveURLs
             ]
         ];
     }
-
-
-
 }
-

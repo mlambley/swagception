@@ -9,5 +9,3 @@ $kernel->init([
     'includePaths' => [__DIR__.'/../src'],
     'excludePaths' => [__DIR__]
 ]);
-
-?>

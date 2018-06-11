@@ -113,7 +113,8 @@ class SwaggerSchema
         return $PathHandler;
     }
 
-    public function applyToPathHandlers($closure) {
+    public function applyToPathHandlers($closure)
+    {
         $this->applyToPathHandlers[] = $closure;
         return $this;
     }
@@ -124,9 +125,6 @@ class SwaggerSchema
      */
     public function __get($key)
     {
-//        Pretend that this instance is the schema object itself.
-//        return SwaggerSchema::Create()
-//            ->withSchema($this->schema->$key);
         return $this->schema->$key;
     }
 
