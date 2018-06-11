@@ -25,6 +25,7 @@
         "friendsofphp/php-cs-fixer": "^2.12"
     },
     "scripts": {
+        "test": "php ./vendor/codeception/codeception/codecept run",
         "lint": "php ./vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix ."
     }
 }
