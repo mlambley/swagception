@@ -132,6 +132,22 @@ class SwaggerSchema
     {
         return $this->getScheme() . '://' . $this->getHost() . $this->getBasePath();
     }
+    
+    public function getPaths()
+    {
+        $pathList = [];
+        foreach ($this->schema->paths as $path => $pathData) {
+            foreach (array_keys($pathData) as $action) {
+                //We only check get requests here.
+                if ($action !== 'get') {
+                    continue;
+                }
+
+                $pathList[] = $this->convertPath($path);
+            }
+        }
+        return $pathList;
+    }
 
     /**
      * @return string

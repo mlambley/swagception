@@ -6,9 +6,6 @@ Validate your API against Swagger 2.0 using Codeception
 composer require --dev mlambley/swagception
 ```
 
-## Alpha release
-This library still needs tests written before it can be properly released.
-
 ## What is Swagger?
 Swagger 2.0 (aka Open API 2.0) defines the structure of your API, including end points and the structure of input and output data.
 See [their website](https://swagger.io/) for more information.
@@ -76,23 +73,10 @@ class MyCest
 
     public function __construct()
     {
-        //Configure the swagger schema wrapper.
+        //Configure the swagger schema object.
         $this->swaggerSchema = \Swagception\SwaggerSchema::Create()
             //Path to your existing Swagger specification
             ->withSchemaURI('/path/to/swagger.json')
-
-            //Optional: Tell the system to not fall back to enum and x-example to generate URIs
-            ->useDefaultPathHandler(false)
-
-            //Optional: These can be specified in your spec, but can be overridden here
-            ->withScheme('https')
-            ->withHost('your.api.com')
-            ->withBasePath('/api')
-
-            //Optional: Configure your path handlers by calling a closure each time one is generated.
-            ->applyToPathHandlers(function($PathHandler) use ($ExtraVariable) {
-                $PathHandler->setExtraVariable($ExtraVariable);
-            })
         ;
 
         //Configure the path handler loader.
@@ -103,21 +87,6 @@ class MyCest
             //Set this if your path handler classes have not been loaded into the system yet.
             ->withFilePath('/path/to/pathhandlers/')
         ;
-
-        //Configure the URL Retriever.
-        $this->swaggerSchema->getURLRetriever()
-            //Set GuzzleHttp constructor args. This example turns off ssl verification.
-            ->withArgs(['verify' => false])
-
-            //Set GuzzleHttp request options. This example sets headers.
-            ->withOptions([
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json'
-                ]
-            ])
-        ;
-
     }
 
     /**
@@ -131,44 +100,35 @@ class MyCest
 
     protected function _pathProvider()
     {
-        $pathList = array();
-        foreach ($this->swaggerSchema->paths as $path => $pathData) {
-            foreach ($pathData as $action => $actionData) {
-                //We only check get requests here.
-                if ($action !== 'get') {
-                    continue;
-                }
-
-                $pathList[] = array($this->swaggerSchema->convertPath($path));
-            }
-        }
-
-        return $pathList;
+        //Will return an array of arrays.
+        return array_map(function($val) {
+            return [$val];
+        }, $this->swaggerSchema->getPaths());
     }
 }
-
 ```
 
 Alternatively, you can loop through them in a single function.
 ```php
 public function paths(MyTester $I, \Codeception\Scenario $S)
 {
-    foreach ($this->schema->paths as $path => $pathData) {
-        foreach ($pathData as $action => $actionData) {
-            //We only check get requests here.
-            if ($action !== 'get') {
-                continue;
-            }
-
-            $this->swaggerSchema->testPath($I, $path);
-        }
+    foreach ($this->swaggerSchema->getPaths() as $path) {
+        $this->swaggerSchema->testPath($I, $path);
     }
 }
 ```
 
+Or, if you already have the json and the schema objects, you can call the validation method directly.
+```php
+(new \Swagception\Validator\Validator())
+    ->validate($schema, $json);
+```
+
+## More settings
+See more [configuration options](/docs/01-MoreConfiguration.md).
+
 ## Did this library work for you?
-Show your support by starring me at [Github](https://github.com/mlambley/swagception/)
+Show your support by starring this project at [Github](https://github.com/mlambley/swagception/)
 
 ## Did this library not work for you?
-Log me a [github issue](https://github.com/mlambley/swagception/issues) detailing why it didn't work for you.
-It could be that a small change will make a big difference.
+Log me a [github issue](https://github.com/mlambley/swagception/issues) detailing why it didn't work for you. Your assistance is appreciated.
