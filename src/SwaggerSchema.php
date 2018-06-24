@@ -24,7 +24,7 @@ class SwaggerSchema
      */
     protected $basePath;
     /**
-     * @var \Swagception\PathHandler\PathHandlerLoader
+     * @var \Swagception\PathHandlerLoader\LoadsPathHandlers
      */
     protected $pathHandlerLoader;
     /**
@@ -68,8 +68,14 @@ class SwaggerSchema
         $this->convertedPaths[$actualPath] = $templatePath;
         return $actualPath;
     }
-
-    public function testPath($codeceptionActor, $path, $method = 'get', $expectedStatusCode = 200)
+    
+    /**
+     * @param string $path
+     * @param string $method
+     * @param int $expectedStatusCode
+     * @throws \Swagception\Exception\ValidationException
+     */
+    public function testPath($path, $method = 'get', $expectedStatusCode = 200)
     {
         //Check whether it's a template path or one which has been previously converted into an actual path.
         if (!isset($this->convertedPaths[$path])) {
@@ -80,14 +86,10 @@ class SwaggerSchema
             $templatePath = $this->convertedPaths[$actualPath];
         }
 
-        try {
-            $json = $this->getURLRetriever()->request($this->getURL() . $actualPath);
+        $json = $this->getURLRetriever()->request($this->getURL() . $actualPath);
 
-            (new Validator\Validator())
-                ->validate($this->schema->paths->$templatePath->$method->responses->$expectedStatusCode->schema, $json);
-        } catch (\Swagception\Exception\ValidationException $e) {
-            $codeceptionActor->fail($e->getMessage());
-        }
+        (new Validator\Validator())
+            ->validate($this->schema->paths->$templatePath->$method->responses->$expectedStatusCode->schema, $json);
     }
 
     protected function getHandlesPath($path)
@@ -100,11 +102,11 @@ class SwaggerSchema
             }
 
             //Use the default implementation.
-            $HandlesPath = \Swagception\PathHandler\DefaultPathHandler::class;
+            $PathHandler = (new \Swagception\PathHandler\DefaultPathHandler())
+                ->setSchema($this->schema);
+        } else {
+            $PathHandler = new $HandlesPath();
         }
-
-        $PathHandler = (new $HandlesPath())
-            ->setSchema($this->schema);
 
         foreach ($this->applyToPathHandlers as $closure) {
             $closure($PathHandler);
@@ -137,7 +139,7 @@ class SwaggerSchema
     {
         $pathList = [];
         foreach ($this->schema->paths as $path => $pathData) {
-            foreach (array_keys($pathData) as $action) {
+            foreach (array_keys(get_object_vars($pathData)) as $action) {
                 //We only check get requests here.
                 if ($action !== 'get') {
                     continue;
@@ -314,7 +316,7 @@ class SwaggerSchema
         return $this->pathHandlerLoader;
     }
 
-    public function withPathHandlerLoader(\Swagception\PathHandler\PathHandlerLoader $pathHandlerLoader)
+    public function withPathHandlerLoader(\Swagception\PathHandlerLoader\LoadsPathHandlers $pathHandlerLoader)
     {
         $this->pathHandlerLoader = $pathHandlerLoader;
         return $this;
@@ -322,6 +324,6 @@ class SwaggerSchema
 
     protected function loadDefaultPathHandlerLoader()
     {
-        $this->pathHandlerLoader = new \Swagception\PathHandler\PathHandlerLoader();
+        $this->pathHandlerLoader = new \Swagception\PathHandlerLoader\PathHandlerLoader();
     }
 }

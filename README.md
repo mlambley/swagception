@@ -34,7 +34,7 @@ namespace My\API\PathHandlers
  */
 class MyPathHandler implements \Swagception\PathHandler\HandlesPath
 {
-    public function convertPath($path, $method = 'get')
+    public function convertPath($path)
     {
         //Replace {entityID} with a real id
         if (strpos($path, '{entityID}') !== false) {
@@ -95,7 +95,7 @@ class MyCest
     public function path(MyTester $I, \Codeception\Scenario $S, \Codeception\Example $data)
     {
         $path = $data[0];
-        $this->swaggerSchema->testPath($I, $path);
+        $this->swaggerSchema->testPath($path);
     }
 
     protected function _pathProvider()
@@ -113,7 +113,7 @@ Alternatively, you can loop through them in a single function.
 public function paths(MyTester $I, \Codeception\Scenario $S)
 {
     foreach ($this->swaggerSchema->getPaths() as $path) {
-        $this->swaggerSchema->testPath($I, $path);
+        $this->swaggerSchema->testPath($path);
     }
 }
 ```

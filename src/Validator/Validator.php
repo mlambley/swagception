@@ -9,7 +9,7 @@ use Swagception\Exception;
  */
 class Validator implements CanValidate
 {
-    public function validate($schema, $json, $context = '')
+    public function validate($schema, $json, $context = 'Response')
     {
         //If the json is null, then everything except type:null will fail, unless nullable is specified.
         $continueValidating = $this->validateNullable($schema, $json, $context);

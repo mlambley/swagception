@@ -1,0 +1,722 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "1.0.0",
+        "title": "Symforum",
+        "description": "Symforum Description"
+    },
+    "host": "localhost:8000",
+    "basePath": "/api",
+    "schemes": [
+        "http"
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/users/": {
+            "get": {
+                "summary": "List all users.",
+                "operationId": "ListAllUsers",
+                "responses": {
+                    "200": {
+                        "description": "List of users",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": [
+                                    "Id"
+                                ],
+                                "properties": {
+                                    "Id": {
+                                        "type": "number"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new user",
+                "operationId": "CreateNewUser",
+                "parameters": [
+                    {
+                        "name": "User",
+                        "description": "User object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "Details"
+                            ],
+                            "properties": {
+                                "Details": {
+                                    "type": "object",
+                                    "required": [
+                                        "Name"
+                                    ],
+                                    "properties": {
+                                        "Name": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "User created successfully.",
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "Id",
+                                "Details"
+                            ],
+                            "properties": {
+                                "Id": {
+                                    "type": "number"
+                                },
+                                "Details": {
+                                    "type": "object",
+                                    "required": [
+                                        "Name",
+                                        "Thing"
+                                    ],
+                                    "properties": {
+                                        "Name": {
+                                            "type": "string"
+                                        },
+                                        "Thing": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "body contains invalid data."
+                    }
+                }
+            }
+        },
+        "/users/{userID}": {
+            "get": {
+                "summary": "Retrieve a specific user details.",
+                "operationId": "RetrieveUser",
+                "parameters": [
+                    {
+                        "name": "userID",
+                        "description": "User ID Description",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "minimum": 0,
+                        "format": "int32",
+						"x-example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User details",
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "Id",
+                                "Details"
+                            ],
+                            "properties": {
+                                "Id": {
+                                    "type": "number"
+                                },
+                                "Details": {
+                                    "type": "object",
+                                    "required": [
+                                        "Name",
+                                        "Thing"
+                                    ],
+                                    "properties": {
+                                        "Name": {
+                                            "type": "string"
+                                        },
+                                        "Thing": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found."
+                    }
+                }
+            },
+            "patch": {
+                "summary": "Update a user.",
+                "operationId": "UpdateUser",
+                "parameters": [
+                    {
+                        "name": "userID",
+                        "description": "User ID Description",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "minimum": 0,
+                        "format": "int32"
+                    },
+                    {
+                        "name": "User",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "Details"
+                            ],
+                            "properties": {
+                                "Details": {
+                                    "type": "object",
+                                    "required": [
+                                        "Name"
+                                    ],
+                                    "properties": {
+                                        "Name": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User updated successfully."
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a user.",
+                "operationId": "DeleteUser",
+                "parameters": [
+                    {
+                        "name": "userID",
+                        "description": "User ID Description",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "minimum": 0,
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User deleted successfully."
+                    },
+                    "404": {
+                        "description": "User does not exist."
+                    }
+                }
+            }
+        },
+        "/comments/": {
+            "get": {
+                "summary": "List all comments.",
+                "operationId": "ListAllComments",
+                "responses": {
+                    "200": {
+                        "description": "List of comments",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": [
+                                    "Id",
+                                    "Text",
+                                    "User"
+                                ],
+                                "properties": {
+                                    "Id": {
+                                        "type": "number"
+                                    },
+                                    "Text": {
+                                        "type": "string"
+                                    },
+                                    "User": {
+                                        "type": "object",
+                                        "required": [
+                                            "Id"
+                                        ],
+                                        "properties": {
+                                            "Id": {
+                                                "type": "number"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create a new comment",
+                "operationId": "CreateNewComment",
+                "parameters": [
+                    {
+                        "name": "Comment",
+                        "description": "Comment object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "Text",
+                                "User"
+                            ],
+                            "properties": {
+                                "Text": {
+                                    "type": "string"
+                                },
+                                "User": {
+                                    "type": "number"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Comment created successfully.",
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "Id",
+                                "Text",
+                                "User"
+                            ],
+                            "properties": {
+                                "Id": {
+                                    "type": "number"
+                                },
+                                "Text": {
+                                    "type": "string"
+                                },
+                                "User": {
+                                    "type": "object",
+                                    "required": [
+                                        "Id",
+                                        "Details"
+                                    ],
+                                    "properties": {
+                                        "Id": {
+                                            "type": "number"
+                                        },
+                                        "Details": {
+                                            "type": "object",
+                                            "required": [
+                                                "Name",
+                                                "Thing"
+                                            ],
+                                            "properties": {
+                                                "Name": {
+                                                    "type": "string"
+                                                },
+                                                "Thing": {
+                                                    "type": "number"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "body contains invalid data."
+                    }
+                }
+            }
+        },
+        "/comments/{commentID}": {
+            "get": {
+                "summary": "Retrieve a specific comment details.",
+                "operationId": "RetrieveComment",
+                "parameters": [
+                    {
+                        "name": "commentID",
+                        "description": "Comment ID Description",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "minimum": 0,
+                        "format": "int32",
+						"x-example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comment details",
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "Id",
+                                "Text",
+                                "User"
+                            ],
+                            "properties": {
+                                "Id": {
+                                    "type": "number"
+                                },
+                                "Text": {
+                                    "type": "string"
+                                },
+                                "User": {
+                                    "type": "object",
+                                    "required": [
+                                        "Id",
+                                        "Details"
+                                    ],
+                                    "properties": {
+                                        "Id": {
+                                            "type": "number"
+                                        },
+                                        "Details": {
+                                            "type": "object",
+                                            "required": [
+                                                "Name",
+                                                "Thing"
+                                            ],
+                                            "properties": {
+                                                "Name": {
+                                                    "type": "string"
+                                                },
+                                                "Thing": {
+                                                    "type": "number"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Comment not found."
+                    }
+                }
+            },
+            "patch": {
+                "summary": "Update a comment.",
+                "operationId": "UpdateComment",
+                "parameters": [
+                    {
+                        "name": "commentID",
+                        "description": "Comment ID Description",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "minimum": 0,
+                        "format": "int32"
+                    },
+                    {
+                        "name": "Comment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "Text"
+                            ],
+                            "properties": {
+                                "Text": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Comment updated successfully."
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a comment.",
+                "operationId": "DeleteComment",
+                "parameters": [
+                    {
+                        "name": "commentID",
+                        "description": "Comment ID Description",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "minimum": 0,
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Comment deleted successfully."
+                    },
+                    "404": {
+                        "description": "Comment does not exist."
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "User": {
+            "GET_Entity": {
+                "type": "object",
+                "required": [
+                    "Id",
+                    "Details"
+                ],
+                "properties": {
+                    "Id": {
+                        "type": "number"
+                    },
+                    "Details": {
+                        "type": "object",
+                        "required": [
+                            "Name",
+                            "Thing"
+                        ],
+                        "properties": {
+                            "Name": {
+                                "type": "string"
+                            },
+                            "Thing": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                }
+            },
+            "PATCH_Entity": {
+                "type": "object",
+                "required": [
+                    "Details"
+                ],
+                "properties": {
+                    "Details": {
+                        "type": "object",
+                        "required": [
+                            "Name"
+                        ],
+                        "properties": {
+                            "Name": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "POST_Entity": {
+                "type": "object",
+                "required": [
+                    "Details"
+                ],
+                "properties": {
+                    "Details": {
+                        "type": "object",
+                        "required": [
+                            "Name"
+                        ],
+                        "properties": {
+                            "Name": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "Get_Details": {
+                "type": "object",
+                "required": [
+                    "Name",
+                    "Thing"
+                ],
+                "properties": {
+                    "Name": {
+                        "type": "string"
+                    },
+                    "Thing": {
+                        "type": "number"
+                    }
+                }
+            },
+            "Set_Details": {
+                "type": "object",
+                "required": [
+                    "Name"
+                ],
+                "properties": {
+                    "Name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Set_PrimaryKey": {
+                "type": "number"
+            },
+            "Get_Id": {
+                "type": "number"
+            },
+            "Get_Name": {
+                "type": "string"
+            },
+            "Get_Thing": {
+                "type": "number"
+            },
+            "Set_Name": {
+                "type": "string"
+            }
+        },
+        "Comment": {
+            "GET_Entity": {
+                "type": "object",
+                "required": [
+                    "Id",
+                    "Text",
+                    "User"
+                ],
+                "properties": {
+                    "Id": {
+                        "type": "number"
+                    },
+                    "Text": {
+                        "type": "string"
+                    },
+                    "User": {
+                        "type": "object",
+                        "required": [
+                            "Id",
+                            "Details"
+                        ],
+                        "properties": {
+                            "Id": {
+                                "type": "number"
+                            },
+                            "Details": {
+                                "type": "object",
+                                "required": [
+                                    "Name",
+                                    "Thing"
+                                ],
+                                "properties": {
+                                    "Name": {
+                                        "type": "string"
+                                    },
+                                    "Thing": {
+                                        "type": "number"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "PATCH_Entity": {
+                "type": "object",
+                "required": [
+                    "Text"
+                ],
+                "properties": {
+                    "Text": {
+                        "type": "string"
+                    }
+                }
+            },
+            "POST_Entity": {
+                "type": "object",
+                "required": [
+                    "Text",
+                    "User"
+                ],
+                "properties": {
+                    "Text": {
+                        "type": "string"
+                    },
+                    "User": {
+                        "type": "number"
+                    }
+                }
+            },
+            "Set_PrimaryKey": {
+                "type": "number"
+            },
+            "Get_Id": {
+                "type": "number"
+            },
+            "Get_Text": {
+                "type": "string"
+            },
+            "Get_User": {
+                "type": "object",
+                "required": [
+                    "Id",
+                    "Details"
+                ],
+                "properties": {
+                    "Id": {
+                        "type": "number"
+                    },
+                    "Details": {
+                        "type": "object",
+                        "required": [
+                            "Name",
+                            "Thing"
+                        ],
+                        "properties": {
+                            "Name": {
+                                "type": "string"
+                            },
+                            "Thing": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                }
+            },
+            "Set_Text": {
+                "type": "string"
+            },
+            "Set_User": {
+                "type": "number"
+            }
+        }
+    },
+    "parameters": {
+        "userID": {
+            "name": "userID",
+            "description": "User ID Description",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "minimum": 0,
+            "format": "int32"
+        },
+        "commentID": {
+            "name": "commentID",
+            "description": "Comment ID Description",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "minimum": 0,
+            "format": "int32"
+        }
+    }
+}

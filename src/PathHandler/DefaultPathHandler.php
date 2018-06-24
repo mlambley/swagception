@@ -5,12 +5,16 @@ class DefaultPathHandler implements HandlesPath
 {
     protected $schema;
 
-    public function convertPath($path, $method = 'get')
+    public function convertPath($path)
     {
+        if (!isset($this->schema) || !isset($this->schema->paths->$path) || !isset($this->schema->paths->$path->get) || !isset($this->schema->paths->$path->get->parameters)) {
+            //Could not find a get request at this path.
+            return $path;
+        }
+        
         //Check enum and x-example
-
         $paramValues = array();
-        foreach ($this->schema->paths->$path->$method->parameters as $param) {
+        foreach ($this->schema->paths->$path->get->parameters as $param) {
             if ($param->in !== 'path') {
                 //We're only parsing path parameters in this function.
                 continue;
@@ -42,5 +46,6 @@ class DefaultPathHandler implements HandlesPath
     public function setSchema($schema)
     {
         $this->schema = $schema;
+        return $this;
     }
 }

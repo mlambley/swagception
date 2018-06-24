@@ -11,7 +11,8 @@
     ],
     "autoload": {
         "psr-4": {
-            "Swagception\\": "src/"
+            "Swagception\\": "src/",
+            "tests\\Dummy\\": "tests/_support/Dummy/"
         }
     },
     "require": {
