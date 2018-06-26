@@ -32,18 +32,14 @@ class SwaggerSchema
      */
     protected $urlRetriever;
     /**
-     * @var bool Whether we use the default path handler (which fetches enum and x-example for parameters) or whether we're always going to use our own path handler classes.
+     * @var string[] Only match routes containing at least one of these.
      */
-    protected $useDefaultPathHandler;
-
-    protected $applyToPathHandlers;
+    protected $filters;
 
     protected $convertedPaths;
 
     public function __construct()
     {
-        $this->useDefaultPathHandler = true;
-        $this->applyToPathHandlers = [];
         $this->convertedPaths = [];
     }
 
@@ -63,12 +59,13 @@ class SwaggerSchema
 
     public function convertPath($templatePath)
     {
-        $HandlesPath = $this->getHandlesPath($templatePath);
+        $HandlesPath = $this->getPathHandlerLoader()->getHandler($templatePath);
         $actualPath = $HandlesPath->convertPath($templatePath);
         $this->convertedPaths[$actualPath] = $templatePath;
+        $this->getPathHandlerLoader()->unloadHandlers();
         return $actualPath;
     }
-    
+
     /**
      * @param string $path
      * @param string $method
@@ -91,34 +88,28 @@ class SwaggerSchema
         (new Validator\Validator())
             ->validate($this->schema->paths->$templatePath->$method->responses->$expectedStatusCode->schema, $json);
     }
-
-    protected function getHandlesPath($path)
+    
+    /**
+     * Checks whether the path should be included, based on the previously specified filters.
+     *
+     * @param string $path
+     * @return bool
+     */
+    public function checkFilter($path)
     {
-        $HandlesPath = $this->getPathHandlerLoader()->getClass($path);
-
-        if (empty($HandlesPath)) {
-            if (!$this->useDefaultPathHandler) {
-                throw new \Exception(sprintf('There is no path handler configured for path %1$s', $path));
+        //No filters? Include all paths.
+        if (empty($this->filters)) {
+            return true;
+        }
+        
+        //Match either with or without braces.
+        $cleanPath = str_replace(array('{', '}'), array('', ''), $path);
+        foreach ($this->filters as $filter) {
+            if (strpos($path, $filter) !== false || strpos($cleanPath, $filter) !== false) {
+                return true;
             }
-
-            //Use the default implementation.
-            $PathHandler = (new \Swagception\PathHandler\DefaultPathHandler())
-                ->setSchema($this->schema);
-        } else {
-            $PathHandler = new $HandlesPath();
         }
-
-        foreach ($this->applyToPathHandlers as $closure) {
-            $closure($PathHandler);
-        }
-
-        return $PathHandler;
-    }
-
-    public function applyToPathHandlers($closure)
-    {
-        $this->applyToPathHandlers[] = $closure;
-        return $this;
+        return false;
     }
 
     /**
@@ -134,18 +125,20 @@ class SwaggerSchema
     {
         return $this->getScheme() . '://' . $this->getHost() . $this->getBasePath();
     }
-    
+
     public function getPaths()
     {
         $pathList = [];
         foreach ($this->schema->paths as $path => $pathData) {
-            foreach (array_keys(get_object_vars($pathData)) as $action) {
-                //We only check get requests here.
-                if ($action !== 'get') {
-                    continue;
-                }
+            if ($this->checkFilter($path)) {
+                foreach (array_keys(get_object_vars($pathData)) as $action) {
+                    //We only check get requests here.
+                    if ($action !== 'get') {
+                        continue;
+                    }
 
-                $pathList[] = $this->convertPath($path);
+                    $pathList[] = $this->convertPath($path);
+                }
             }
         }
         return $pathList;
@@ -205,7 +198,7 @@ class SwaggerSchema
     public function loadDefaultHost()
     {
         if (!isset($this->schema->host)) {
-            throw new \Exception('Host must be specified, either in the schema or in this object');
+            throw new \Exception('Host must be specified, either in the schema or by calling withHost');
         }
 
         return $this->withHost($this->schema->host);
@@ -237,7 +230,7 @@ class SwaggerSchema
     public function loadDefaultBasePath()
     {
         if (!isset($this->schema->basePath)) {
-            throw new \Exception('BasePath must be specified, either in the schema or in this object');
+            throw new \Exception('BasePath must be specified, either in the schema or by calling withBasePath');
         }
 
         return $this->withBasePath($this->schema->basePath);
@@ -271,12 +264,6 @@ class SwaggerSchema
     public function withSchema($schema)
     {
         $this->schema = $schema;
-        return $this;
-    }
-
-    public function useDefaultPathHandler($useDefaultPathHandler)
-    {
-        $this->useDefaultPathHandler = $useDefaultPathHandler;
         return $this;
     }
 
@@ -324,6 +311,12 @@ class SwaggerSchema
 
     protected function loadDefaultPathHandlerLoader()
     {
-        $this->pathHandlerLoader = new \Swagception\PathHandlerLoader\PathHandlerLoader();
+        $this->pathHandlerLoader = new \Swagception\PathHandlerLoader\PathHandlerLoader($this);
+    }
+    
+    public function withFilters($filters)
+    {
+        $this->filters = $filters;
+        return $this;
     }
 }

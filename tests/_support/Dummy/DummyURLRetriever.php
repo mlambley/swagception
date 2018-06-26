@@ -72,7 +72,8 @@ class DummyURLRetriever implements \Swagception\URLRetriever\CanRetrieveURLs
                         'Thing' => 203320
                     ]
                 ]
-            ])
+            ]),
+            'http://localhost:8000/api/single/1' => 'test string'
         ];
     }
     
@@ -117,7 +118,8 @@ class DummyURLRetriever implements \Swagception\URLRetriever\CanRetrieveURLs
                         'Thing' => 203320
                     ]
                 ]
-            ])
+            ]),
+            'http://localhost:8000/api/single/1' => 123
         ];
     }
     

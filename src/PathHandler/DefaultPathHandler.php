@@ -4,6 +4,11 @@ namespace Swagception\PathHandler;
 class DefaultPathHandler implements HandlesPath
 {
     protected $schema;
+    
+    public function __construct($schema)
+    {
+        $this->schema = $schema;
+    }
 
     public function convertPath($path)
     {
@@ -41,11 +46,5 @@ class DefaultPathHandler implements HandlesPath
         }
 
         return $parsedPath;
-    }
-
-    public function setSchema($schema)
-    {
-        $this->schema = $schema;
-        return $this;
     }
 }

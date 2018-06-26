@@ -1,5 +1,5 @@
 <?php
-class ValidDataCest
+class FilterCest
 {
     protected $swaggerSchema;
     
@@ -8,14 +8,18 @@ class ValidDataCest
      */
     public function testSchema(AcceptanceTester $I, \Codeception\Scenario $S, Codeception\Example $data)
     {
+        $I->wantTo('Filtered data: ' . $data[0]);
         $path = $data[0];
-        $I->wantTo('Valid data: ' . $data[0]);
+        if (strpos($path, '/comments/') === 0) {
+            $I->fail(sprintf('Path %1$s was tested, although filters should have blocked it out.', $path));
+        }
         $this->swaggerSchema->testPath($path);
     }
     
     public function _dataProvider()
     {
         $this->swaggerSchema = \Swagception\SwaggerSchema::Create()
+            ->withFilters(['/users/'])
             ->withSchemaURI('file:///' . __DIR__ . '/../_support/Dummy/swagger.json')
             ->withURLRetriever(new \tests\Dummy\DummyURLRetriever())
         ;

@@ -474,249 +474,32 @@
                     }
                 }
             }
-        }
-    },
-    "definitions": {
-        "User": {
-            "GET_Entity": {
-                "type": "object",
-                "required": [
-                    "Id",
-                    "Details"
-                ],
-                "properties": {
-                    "Id": {
-                        "type": "number"
-                    },
-                    "Details": {
-                        "type": "object",
-                        "required": [
-                            "Name",
-                            "Thing"
-                        ],
-                        "properties": {
-                            "Name": {
-                                "type": "string"
-                            },
-                            "Thing": {
-                                "type": "number"
-                            }
-                        }
-                    }
-                }
-            },
-            "PATCH_Entity": {
-                "type": "object",
-                "required": [
-                    "Details"
-                ],
-                "properties": {
-                    "Details": {
-                        "type": "object",
-                        "required": [
-                            "Name"
-                        ],
-                        "properties": {
-                            "Name": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "POST_Entity": {
-                "type": "object",
-                "required": [
-                    "Details"
-                ],
-                "properties": {
-                    "Details": {
-                        "type": "object",
-                        "required": [
-                            "Name"
-                        ],
-                        "properties": {
-                            "Name": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "Get_Details": {
-                "type": "object",
-                "required": [
-                    "Name",
-                    "Thing"
-                ],
-                "properties": {
-                    "Name": {
-                        "type": "string"
-                    },
-                    "Thing": {
-                        "type": "number"
-                    }
-                }
-            },
-            "Set_Details": {
-                "type": "object",
-                "required": [
-                    "Name"
-                ],
-                "properties": {
-                    "Name": {
-                        "type": "string"
-                    }
-                }
-            },
-            "Set_PrimaryKey": {
-                "type": "number"
-            },
-            "Get_Id": {
-                "type": "number"
-            },
-            "Get_Name": {
-                "type": "string"
-            },
-            "Get_Thing": {
-                "type": "number"
-            },
-            "Set_Name": {
-                "type": "string"
-            }
         },
-        "Comment": {
-            "GET_Entity": {
-                "type": "object",
-                "required": [
-                    "Id",
-                    "Text",
-                    "User"
+        "/single/{id}": {
+            "get": {
+                "summary": "Test.",
+                "operationId": "Test",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "description": "test",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "minimum": 0,
+                        "format": "int32",
+						"x-example": 1
+                    }
                 ],
-                "properties": {
-                    "Id": {
-                        "type": "number"
-                    },
-                    "Text": {
-                        "type": "string"
-                    },
-                    "User": {
-                        "type": "object",
-                        "required": [
-                            "Id",
-                            "Details"
-                        ],
-                        "properties": {
-                            "Id": {
-                                "type": "number"
-                            },
-                            "Details": {
-                                "type": "object",
-                                "required": [
-                                    "Name",
-                                    "Thing"
-                                ],
-                                "properties": {
-                                    "Name": {
-                                        "type": "string"
-                                    },
-                                    "Thing": {
-                                        "type": "number"
-                                    }
-                                }
-                            }
+                "responses": {
+                    "200": {
+                        "description": "Test",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
-            },
-            "PATCH_Entity": {
-                "type": "object",
-                "required": [
-                    "Text"
-                ],
-                "properties": {
-                    "Text": {
-                        "type": "string"
-                    }
-                }
-            },
-            "POST_Entity": {
-                "type": "object",
-                "required": [
-                    "Text",
-                    "User"
-                ],
-                "properties": {
-                    "Text": {
-                        "type": "string"
-                    },
-                    "User": {
-                        "type": "number"
-                    }
-                }
-            },
-            "Set_PrimaryKey": {
-                "type": "number"
-            },
-            "Get_Id": {
-                "type": "number"
-            },
-            "Get_Text": {
-                "type": "string"
-            },
-            "Get_User": {
-                "type": "object",
-                "required": [
-                    "Id",
-                    "Details"
-                ],
-                "properties": {
-                    "Id": {
-                        "type": "number"
-                    },
-                    "Details": {
-                        "type": "object",
-                        "required": [
-                            "Name",
-                            "Thing"
-                        ],
-                        "properties": {
-                            "Name": {
-                                "type": "string"
-                            },
-                            "Thing": {
-                                "type": "number"
-                            }
-                        }
-                    }
-                }
-            },
-            "Set_Text": {
-                "type": "string"
-            },
-            "Set_User": {
-                "type": "number"
             }
-        }
-    },
-    "parameters": {
-        "userID": {
-            "name": "userID",
-            "description": "User ID Description",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "minimum": 0,
-            "format": "int32"
-        },
-        "commentID": {
-            "name": "commentID",
-            "description": "Comment ID Description",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "minimum": 0,
-            "format": "int32"
         }
     }
 }

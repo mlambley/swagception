@@ -21,13 +21,13 @@ class InvalidDataCest
     public function _dataProvider()
     {
         $this->swaggerSchema = \Swagception\SwaggerSchema::Create()
-            //Will force an exception if a path handler is not loaded, and will not fall back to the default.
-            ->useDefaultPathHandler(false)
             ->withSchemaURI('file:///' . __DIR__ . '/../_support/Dummy/swagger.json')
             ->withURLRetriever(new \tests\Dummy\DummyURLRetriever(\tests\Dummy\DummyURLRetriever::MODE_INVALID))
         ;
         
         $this->swaggerSchema->getPathHandlerLoader()
+            //Will force an exception if a path handler is not loaded, and will not fall back to the default.
+            ->useDefaultPathHandler(false)
             ->withNamespace('\\tests\\Dummy\\')
             ->withFilePath(__DIR__ . '/../_support/Dummy/')
         ;

@@ -51,7 +51,7 @@ class StringValidator implements CanValidate
 
     protected function validateByte($schema, $json, $context)
     {
-        if (preg_match('/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/', $json) !== 1) {
+        if (preg_match('/^(?:[A-Za-z0-9+\\/]{4})*(?:[A-Za-z0-9+\\/]{2}==|[A-Za-z0-9+\\/]{3}=)?$/', $json) !== 1) {
             throw new Exception\ValidationException(sprintf('%1$s "%2$s" is not valid byte (Base64) data.', $context, $json));
         }
     }
@@ -67,8 +67,8 @@ class StringValidator implements CanValidate
     protected function validateDate($schema, $json, $context)
     {
         //Eg. 2018-05-31
-        $format = 'YY-MM-DD';
-        $date = DateTime::createFromFormat($format, $json);
+        $format = 'Y-m-d';
+        $date = \DateTime::createFromFormat($format, $json);
         if (!$date || ($date->format($format) !== $json)) {
             throw new Exception\ValidationException(sprintf('%1$s "%2$s" is not a valid date (YYYY-MM-DD).', $context, $json));
         }
@@ -113,9 +113,6 @@ class StringValidator implements CanValidate
         //Regular expressions are not implicitly anchored.
 
         $regex = $schema->pattern;
-
-        //Double-escape backslashes because PHP that's why.
-        $regex = str_replace('\\', '\\\\', $regex);
 
         //Add in the forward slashes.
         $regex = '/' . $regex . '/';

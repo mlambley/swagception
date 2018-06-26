@@ -131,4 +131,4 @@ See more [configuration options](/docs/01-MoreConfiguration.md).
 Show your support by starring this project at [Github](https://github.com/mlambley/swagception/)
 
 ## Did this library not work for you?
-Log me a [github issue](https://github.com/mlambley/swagception/issues) detailing why it didn't work for you. Your assistance is appreciated.
+Log me a [github issue](https://github.com/mlambley/swagception/issues) detailing how it didn't work for you. Your assistance is appreciated.

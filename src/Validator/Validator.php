@@ -45,7 +45,14 @@ class Validator implements CanValidate
             $this->validateDefinitions($schema, $json, $context);
         }
     }
-
+    
+    /**
+     * @param object $schema
+     * @param object $json
+     * @param string $context
+     * @return boolean Whether or not to continue processing.
+     * @throws Exception\ValidationException
+     */
     protected function validateNullable($schema, $json, $context)
     {
         //I have taken the liberty of borrowing the nullable property from Swagger 3.0 https://swagger.io/specification/
@@ -104,7 +111,7 @@ class Validator implements CanValidate
     {
         //The value of this keyword MUST be an array.  This array MUST have at least one element.  Elements in the array MUST be unique. Elements in the array MAY be of any type, including null.
         //An instance validates successfully against this keyword if its value is equal to one of the elements in this keyword's array value.
-        if (!in_array($schema->enum, $json)) {
+        if (!in_array($json, $schema->enum)) {
             throw new Exception\ValidationException(sprintf('%1$s must be one of "%2$s".', $context, implode('", "', $schema->enum)));
         }
     }
@@ -146,22 +153,20 @@ class Validator implements CanValidate
         //An instance validates successfully against this keyword if it validates successfully against exactly one schema defined by this keyword's value.
         $errors = [];
         $passCount = 0;
-        $failCount = 0;
         foreach ($schema->oneOf as $subschema) {
             try {
                 (new Validator())
                     ->validate($subschema, $json, $context);
                 $passCount++;
             } catch (Exception\ValidationException $e) {
-                $failCount++;
                 $errors[] = $e->getMessage();
             }
         }
 
         if ($passCount > 1) {
-            //Yes it really is strictly "one of". It's a silly concept in the first place.
+            //Yes it really is strictly "one of".
             throw new Exception\ValidationException(sprintf(
-                '%1$s matched more than one of the \'oneOf\' schemas, but more than one matched. Did you mean to use \'anyOf\'? Error messages are "%2$s"',
+                '%1$s must match exactly one of the specified \'oneOf\' schemas, but more than one matched. Did you mean to use \'anyOf\'? Error messages are "%2$s"',
                 $context,
                 implode('", "', $errors)
             ));
@@ -174,14 +179,16 @@ class Validator implements CanValidate
     {
         //This keyword's value MUST be an object. This object MUST be a valid JSON Schema.
         //An instance is valid against this keyword if it fails to validate successfully against the schema defined by this keyword.
+        
         try {
             (new Validator())
                 ->validate($schema->not, $json, $context);
-
-            throw new Exception\ValidationException(sprintf('%1$s successfully passed the specified \'not\' schema.', $context));
         } catch (Exception\ValidationException $e) {
             //If you try to fail and succeed, which have you done?
+            return;
         }
+        
+        throw new Exception\ValidationException(sprintf('%1$s successfully passed the specified \'not\' schema.', $context));
     }
 
     protected function validateDefinitions($schema, $json, $context)

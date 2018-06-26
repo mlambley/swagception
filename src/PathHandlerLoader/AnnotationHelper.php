@@ -21,7 +21,7 @@ abstract class AnnotationHelper
             //get_declared_classes doesn't return the first backslash.
             $namespace = substr($namespace, 1);
         }
-        
+
         $this->namespace = $namespace;
         return $this;
     }
@@ -70,7 +70,7 @@ abstract class AnnotationHelper
 
             //Replace backslash with its ascii hex code.
             $regex = "/^" . str_replace('\\', '\x5C', $this->namespace) . ".*$/";
-            
+
             //Loop through every declared class, looking for all classes in the namespace.
             foreach (get_declared_classes() as $name) {
                 //Check whether the class is within the namespace.
