@@ -1,6 +1,8 @@
 <?php
 namespace Swagception\URLRetriever;
 
+use Psr\Http\Message\ResponseInterface;
+
 interface CanRetrieveURLs
 {
     /**
@@ -8,7 +10,7 @@ interface CanRetrieveURLs
      *
      * @param string $url
      * @param string $method
-     * @return object
+     * @return ResponseInterface
      */
     public function request($url, $method = 'get');
 }

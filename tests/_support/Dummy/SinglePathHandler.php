@@ -15,7 +15,7 @@ class SinglePathHandler implements \Swagception\PathHandler\HandlesPath
         ];
     }
     
-    public function convertPath($path)
+    public function convertPath($path, $method, $statusCode)
     {
         if (isset($this->replacements[$path])) {
             return $this->replacements[$path];

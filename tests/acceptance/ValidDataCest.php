@@ -8,9 +8,11 @@ class ValidDataCest
      */
     public function testSchema(AcceptanceTester $I, \Codeception\Scenario $S, Codeception\Example $data)
     {
-        $path = $data[0];
-        $I->wantTo('Valid data: ' . $data[0]);
-        $this->swaggerSchema->testPath($path);
+        $path = $data['path'];
+        $method = $data['method'];
+        $code = $data['code'];
+        $I->wantTo("Valid data: {$method} {$path} | Status Code: {$code}");
+        $this->swaggerSchema->testPath($path, $method, $code);
     }
     
     public function _dataProvider()
@@ -27,8 +29,6 @@ class ValidDataCest
             ->withFilePath(__DIR__ . '/../_support/Dummy/')
         ;
         
-        return array_map(function ($val) {
-            return [$val];
-        }, $this->swaggerSchema->getPaths());
+        return $this->swaggerSchema->getPaths();
     }
 }
