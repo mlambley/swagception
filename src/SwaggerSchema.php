@@ -1,9 +1,11 @@
 <?php
+
 namespace Swagception;
 
 use JsonSchema\SchemaStorage;
-use JsonSchema\Uri\UriRetriever;
 use JsonSchema\Uri\UriResolver;
+use JsonSchema\Uri\UriRetriever;
+use Swagception\Exception\ValidationException;
 
 class SwaggerSchema
 {
@@ -48,20 +50,21 @@ class SwaggerSchema
         return new static();
     }
 
-    public function getTemplatePath($path)
+    public function getTemplatePath($path, $method = 'get', $statusCode = 200)
     {
-        if (!isset($this->convertedPaths[$path])) {
+        if (!isset($this->convertedPaths[$method][$path][$statusCode])) {
             return $path;
-        } else {
-            return $this->convertedPaths[$path];
         }
+
+        return $this->convertedPaths[$method][$path][$statusCode];
     }
 
-    public function convertPath($templatePath)
+    public function convertPath($templatePath, $method = 'get', $statusCode)
     {
-        $HandlesPath = $this->getPathHandlerLoader()->getHandler($templatePath);
-        $actualPath = $HandlesPath->convertPath($templatePath);
-        $this->convertedPaths[$actualPath] = $templatePath;
+        $handlesPath = $this->getPathHandlerLoader()->getHandler($templatePath);
+        $actualPath  = $handlesPath->convertPath($templatePath, $method, $statusCode);
+
+        $this->convertedPaths[$method][$actualPath][$statusCode] = $templatePath;
         $this->getPathHandlerLoader()->unloadHandlers();
         return $actualPath;
     }
@@ -69,30 +72,37 @@ class SwaggerSchema
     /**
      * @param string $path
      * @param string $method
-     * @param int $expectedStatusCode
+     * @param int    $expectedStatusCode
+     *
      * @throws \Swagception\Exception\ValidationException
      */
     public function testPath($path, $method = 'get', $expectedStatusCode = 200)
     {
         //Check whether it's a template path or one which has been previously converted into an actual path.
-        if (!isset($this->convertedPaths[$path])) {
-            $actualPath = $this->convertPath($path);
+        if (!isset($this->convertedPaths[$method][$path][$expectedStatusCode])) {
+            $actualPath   = $this->convertPath($path, $method, $expectedStatusCode);
             $templatePath = $path;
         } else {
-            $actualPath = $path;
-            $templatePath = $this->convertedPaths[$actualPath];
+            $actualPath   = $path;
+            $templatePath = $this->convertedPaths[$method][$actualPath][$expectedStatusCode];
         }
 
-        $json = $this->getURLRetriever()->request($this->getURL() . $actualPath);
-
-        (new Validator\Validator())
-            ->validate($this->schema->paths->$templatePath->$method->responses->$expectedStatusCode->schema, $json);
+        $response = $this->getURLRetriever()->request($this->getURL() . $actualPath, $method);
+        if ($response->getStatusCode() !== $expectedStatusCode) {
+            throw new ValidationException('Status Code: %d, expected %d', $response->getStatusCode(), $expectedStatusCode);
+        }
+        if (isset($this->schema->paths->$templatePath->$method->responses->$expectedStatusCode->schema)) {
+            $json = json_decode($response->getBody()->getContents());
+            (new Validator\Validator())
+                ->validate($this->schema->paths->$templatePath->$method->responses->$expectedStatusCode->schema, $json);
+        }
     }
-    
+
     /**
      * Checks whether the path should be included, based on the previously specified filters.
      *
      * @param string $path
+     *
      * @return bool
      */
     public function checkFilter($path)
@@ -101,9 +111,9 @@ class SwaggerSchema
         if (empty($this->filters)) {
             return true;
         }
-        
+
         //Match either with or without braces.
-        $cleanPath = str_replace(array('{', '}'), array('', ''), $path);
+        $cleanPath = str_replace(['{', '}'], ['', ''], $path);
         foreach ($this->filters as $filter) {
             if (strpos($path, $filter) !== false || strpos($cleanPath, $filter) !== false) {
                 return true;
@@ -114,6 +124,7 @@ class SwaggerSchema
 
     /**
      * @param mixed $key Schema object key
+     *
      * @return mixed Schema object value
      */
     public function __get($key)
@@ -132,12 +143,13 @@ class SwaggerSchema
         foreach ($this->schema->paths as $path => $pathData) {
             if ($this->checkFilter($path)) {
                 foreach (array_keys(get_object_vars($pathData)) as $action) {
-                    //We only check get requests here.
-                    if ($action !== 'get') {
-                        continue;
-                    }
-
-                    $pathList[] = $this->convertPath($path);
+                    $statusCodes = array_keys(get_object_vars($pathData->{$action}->responses));
+                    $statusCode  = array_shift($statusCodes);
+                    $pathList[]  = [
+                        'method' => $action,
+                        'path'   => $this->convertPath($path, $action, $statusCode),
+                        'code'   => $statusCode,
+                    ];
                 }
             }
         }
@@ -159,6 +171,7 @@ class SwaggerSchema
      * Specify your own scheme.
      *
      * @param string $scheme
+     *
      * @return static
      */
     public function withScheme($scheme)
@@ -187,6 +200,7 @@ class SwaggerSchema
      * Specify your own host.
      *
      * @param string $host
+     *
      * @return static
      */
     public function withHost($host)
@@ -219,6 +233,7 @@ class SwaggerSchema
      * Specify your own basePath.
      *
      * @param string $basePath
+     *
      * @return static
      */
     public function withBasePath($basePath)
@@ -240,6 +255,7 @@ class SwaggerSchema
      * Allow the system to generate the schema.
      *
      * @param string $specURI
+     *
      * @return static
      */
     public function withSchemaURI($specURI)
@@ -259,6 +275,7 @@ class SwaggerSchema
      * Specify your own schema.
      *
      * @param object $schema
+     *
      * @return static
      */
     public function withSchema($schema)
@@ -313,7 +330,7 @@ class SwaggerSchema
     {
         $this->pathHandlerLoader = new \Swagception\PathHandlerLoader\PathHandlerLoader($this);
     }
-    
+
     public function withFilters($filters)
     {
         $this->filters = $filters;

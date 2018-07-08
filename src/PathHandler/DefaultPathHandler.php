@@ -1,25 +1,31 @@
 <?php
+
 namespace Swagception\PathHandler;
+
+use Swagception\SwaggerSchema;
 
 class DefaultPathHandler implements HandlesPath
 {
+    /**
+     * @var SwaggerSchema
+     */
     protected $schema;
-    
-    public function __construct($schema)
+
+    public function __construct(SwaggerSchema $schema)
     {
         $this->schema = $schema;
     }
 
-    public function convertPath($path)
+    public function convertPath($path, $method, $statusCode)
     {
-        if (!isset($this->schema) || !isset($this->schema->paths->$path) || !isset($this->schema->paths->$path->get) || !isset($this->schema->paths->$path->get->parameters)) {
+        if (!isset($this->schema) || !isset($this->schema->paths->$path) || !isset($this->schema->paths->$path->$method) || !isset($this->schema->paths->$path->$method->parameters)) {
             //Could not find a get request at this path.
             return $path;
         }
-        
+
         //Check enum and x-example
-        $paramValues = array();
-        foreach ($this->schema->paths->$path->get->parameters as $param) {
+        $paramValues = [];
+        foreach ($this->schema->paths->$path->$method->parameters as $param) {
             if ($param->in !== 'path') {
                 //We're only parsing path parameters in this function.
                 continue;

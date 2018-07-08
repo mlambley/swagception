@@ -1,19 +1,25 @@
 <?php
 class FilterCest
 {
+    /**
+     * @var \Swagception\SwaggerSchema
+     */
     protected $swaggerSchema;
-    
+
     /**
      * @dataProvider _dataProvider
+     * @throws \Swagception\Exception\ValidationException
      */
     public function testSchema(AcceptanceTester $I, \Codeception\Scenario $S, Codeception\Example $data)
     {
-        $I->wantTo('Filtered data: ' . $data[0]);
-        $path = $data[0];
+        $path = $data['path'];
+        $method = $data['method'];
+        $code = $data['code'];
+        $I->wantTo("Filtered data: {$method} {$path} | Status Code: {$code}");
         if (strpos($path, '/comments/') === 0) {
             $I->fail(sprintf('Path %1$s was tested, although filters should have blocked it out.', $path));
         }
-        $this->swaggerSchema->testPath($path);
+        $this->swaggerSchema->testPath($path, $method, $code);
     }
     
     public function _dataProvider()
@@ -30,9 +36,7 @@ class FilterCest
             ->withNamespace('\\tests\\Dummy\\')
             ->withFilePath(__DIR__ . '/../_support/Dummy/')
         ;
-        
-        return array_map(function ($val) {
-            return [$val];
-        }, $this->swaggerSchema->getPaths());
+
+        return $this->swaggerSchema->getPaths();
     }
 }

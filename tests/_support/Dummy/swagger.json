@@ -121,7 +121,7 @@
                         "type": "integer",
                         "minimum": 0,
                         "format": "int32",
-						"x-example": 1
+                        "x-example": 1
                     }
                 ],
                 "responses": {
@@ -171,7 +171,8 @@
                         "required": true,
                         "type": "integer",
                         "minimum": 0,
-                        "format": "int32"
+                        "format": "int32",
+                        "x-example": 1
                     },
                     {
                         "name": "User",
@@ -215,7 +216,8 @@
                         "required": true,
                         "type": "integer",
                         "minimum": 0,
-                        "format": "int32"
+                        "format": "int32",
+                        "x-example": 1
                     }
                 ],
                 "responses": {
@@ -360,7 +362,7 @@
                         "type": "integer",
                         "minimum": 0,
                         "format": "int32",
-						"x-example": 1
+                        "x-example": 1
                     }
                 ],
                 "responses": {
@@ -426,7 +428,8 @@
                         "required": true,
                         "type": "integer",
                         "minimum": 0,
-                        "format": "int32"
+                        "format": "int32",
+                        "x-example": 1
                     },
                     {
                         "name": "Comment",
@@ -462,7 +465,8 @@
                         "required": true,
                         "type": "integer",
                         "minimum": 0,
-                        "format": "int32"
+                        "format": "int32",
+                        "x-example": 1
                     }
                 ],
                 "responses": {
@@ -488,7 +492,7 @@
                         "type": "integer",
                         "minimum": 0,
                         "format": "int32",
-						"x-example": 1
+                        "x-example": 1
                     }
                 ],
                 "responses": {
