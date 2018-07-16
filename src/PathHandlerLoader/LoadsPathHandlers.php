@@ -11,7 +11,10 @@ interface LoadsPathHandlers
      */
     public function getHandler($path);
     /**
-     * Cleans up and destroys all path handlers.
+     * Cleans up and destroys path handlers for the specified path.
+     * Or all path handlers if path is null.
+     *
+     * @param string|null $path
      */
-    public function unloadHandlers();
+    public function unloadHandlers($path = null);
 }

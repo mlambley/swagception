@@ -12,10 +12,19 @@ $this->swaggerSchema
     ->withScheme('https')
     ->withHost('your.api.com')
     ->withBasePath('/api')
-    
+
     //Only test paths which include one of the specified strings
     ->withFilters(['/api/entity/', '/api/something/'])
-    
+
+    //Generate a \Swagception\Exception\ResponseEmptyException if a HTML response is empty
+    ->withErrorOnEmpty(true)
+
+    //Include an HTML reporter
+    ->withAddedReporter(
+        (new \Swagception\Reporter\HTMLReporter())
+            ->withFileName(codecept_output_dir() . '/MyReport.html')
+    )
+
     //Specify your own URL retriever which implements \Swagception\URLRetriever\CanRetrieveURLs
     ->withURLRetriever($myURLRetriever)
 
@@ -32,8 +41,8 @@ $this->swaggerSchema->getPathHandlerLoader()
         $PathHandler->setExtraVariable($ExtraVariable);
     })
 
-    //You can also call a closure each time one is unloaded. Useful if you've created temporary data and need to clean it up.
-    //The handlers are unloaded after every call to testPath.
+    //You can also call a closure each time a handler is unloaded. Useful if you've created temporary data and need to clean it up.
+    //This will be called automatically after the test suite finishes.
     ->onHandlerUnload(function($PathHandler) {
         $PathHandler->unload();
     })
@@ -54,3 +63,14 @@ $this->swaggerSchema->getURLRetriever()
     ])
 ;
 ```
+
+## Why the swagception extension?
+There are limitations on what functionality is available from within a Codeception cest. This is why they included extensions.
+The swagception extension, however, is not required for the actual validation itself. 
+If you do not use reporters, and you do not require your path handlers to be unloaded, you can omit the extension.
+
+## Override any class
+Swagception is designed such that any core class can be replaced with one which implements the corresponding interface. 
+Path handler loader, for example, can be replaced with anything which implements `\Swagception\PathHandlerLoader\LoadsPathHandlers`
+by either calling `$SwaggerSchema->withPathHandlerLoader` or by overriding `loadDefaultPathHandlerLoader`.
+If you come across a class which cannot be customised, or you are in any way limited by the functionality provided here, please log me a ticket.

@@ -2,6 +2,7 @@
 namespace Swagception\PathHandlerLoader;
 
 use Swagception\PathHandler\HandlesPath;
+use Swagception\Exception;
 
 /**
  * Accepts a namespace and a path. Requires all files in that path.
@@ -12,13 +13,13 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
     /**
      * @var \Swagception\SwaggerSchema Reference back to the schema object. Needed for the default path handler.
      */
-    protected $schema;
+    protected $swaggerSchema;
     /**
      * @var string[] We link paths to classes via annotations. These are the annotation keys we search for.
      */
     protected $annotationKeys;
     /**
-     * @var HandlesPath[] The handler cache.
+     * @var [string => [string => HandlesPath]] The handler cache, indexed by both path and class name.
      */
     protected $handlers;
     /**
@@ -33,10 +34,14 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
      * @var bool Whether we use the default path handler (which fetches enum and x-example for parameters) or whether we're always going to use our own path handler classes.
      */
     protected $useDefaultPathHandler;
+    /**
+     * @var string Which path we are currently testing. This is the first index of $this->handlers
+     */
+    protected $currentPath;
 
-    public function __construct($schema)
+    public function __construct($swaggerSchema)
     {
-        $this->schema = $schema;
+        $this->swaggerSchema = $swaggerSchema;
         $this->loadAnnotationKeys();
         $this->handlers = [];
         $this->onHandlerLoad = [];
@@ -91,10 +96,11 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
      */
     public function getHandler($path)
     {
+        $this->setCurrentPath($path);
         $handlerClassName = $this->getClass($path);
         if (empty($handlerClassName)) {
             if (!$this->useDefaultPathHandler) {
-                throw new \Exception(sprintf('There is no path handler configured for %1$s', $path));
+                throw new Exception\NoPathHandlerException(sprintf('There is no path handler configured for %1$s', $path));
             }
             //Don't need to cache the default path handler.
             return $this->getDefaultPathHandler();
@@ -107,26 +113,56 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
      * @param string $handlerClassName
      * @return HandlesPath
      */
-    public function getHandlerFromClass($handlerClassName)
+    public function getHandlerFromClass($handlerClassName, $forceCreate = false)
     {
-        //Look up handler from cache, and create if it doesn't exist.
-        if (!isset($this->handlers[$handlerClassName])) {
-            $this->handlers[$handlerClassName] = $this->getCustomPathHandler($handlerClassName);
+        if ($forceCreate) {
+            $key = null;
+            $cntr = 0;
+            while ($key === null || isset($this->handlers[$this->currentPath][$key])) {
+                $key = $this->getRandomString($handlerClassName);
+                $cntr++;
+                if ($cntr > 1000) {
+                    //Not sure how this could happen, but better to check.
+                    throw new \Exception(sprintf('Could not generate a unique key for handler %1$s', $handlerClassName));
+                }
+            }
+            $this->handlers[$this->currentPath][$key] = $this->getCustomPathHandler($handlerClassName);
+            return $this->handlers[$this->currentPath][$key];
         }
-        return $this->handlers[$handlerClassName];
+
+        //Look up handler from cache, and create if it doesn't exist.
+        if (!isset($this->handlers[$this->currentPath][$handlerClassName])) {
+            $this->handlers[$this->currentPath][$handlerClassName] = $this->getCustomPathHandler($handlerClassName);
+        }
+        return $this->handlers[$this->currentPath][$handlerClassName];
+    }
+
+    protected function getRandomString($beginningWith)
+    {
+        //Doesn't need to be secure. Just needs to be unique.
+        return $beginningWith . md5(microtime(true));
     }
 
     /**
      * @return static
      */
-    public function unloadHandlers()
+    public function unloadHandlers($path = null)
     {
-        foreach ($this->handlers as $Handler) {
-            foreach ($this->onHandlerUnload as $closure) {
-                $closure($Handler);
+        if ($path !== null) {
+            if (isset($this->handlers[$path])) {
+                $this->setCurrentPath($path);
+                foreach ($this->handlers[$path] as $Handler) {
+                    foreach ($this->onHandlerUnload as $closure) {
+                        $closure($Handler);
+                    }
+                }
+                unset($this->handlers[$path]);
+            }
+        } else {
+            foreach (array_keys($this->handlers) as $path) {
+                $this->unloadHandlers($path);
             }
         }
-        $this->handlers = array();
         return $this;
     }
 
@@ -138,7 +174,7 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
 
     protected function getDefaultPathHandler()
     {
-        return (new \Swagception\PathHandler\DefaultPathHandler($this->schema));
+        return (new \Swagception\PathHandler\DefaultPathHandler($this->swaggerSchema));
     }
 
     protected function getCustomPathHandler($handlerClassName)
@@ -148,6 +184,16 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
             $closure($PathHandler);
         }
         return $PathHandler;
+    }
+
+    public function getCurrentPath()
+    {
+        return $this->currentPath;
+    }
+
+    protected function setCurrentPath($path)
+    {
+        $this->currentPath = $path;
     }
 
     protected function loadAnnotationKeys()
@@ -180,7 +226,7 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
     protected function updatePathClass($class, $path)
     {
         if (isset($this->cache[$path])) {
-            throw new \Exception(sprintf('Classes %1$s and %2$s are both marked as handling path %3$s', $this->cache[$path], $class, $path));
+            throw new Exception\ConfigurationException(sprintf('Classes %1$s and %2$s are both marked as handling path %3$s', $this->cache[$path], $class, $path));
         }
         $this->cache[$path] = $class;
     }

@@ -5,7 +5,7 @@ use JsonSchema\SchemaStorage;
 use JsonSchema\Uri\UriRetriever;
 use JsonSchema\Uri\UriResolver;
 
-class SwaggerSchema
+class SwaggerSchema implements Reporter\ReportsTests
 {
     /**
      * @var object The Swagger 2.0 json schema.
@@ -35,12 +35,29 @@ class SwaggerSchema
      * @var string[] Only match routes containing at least one of these.
      */
     protected $filters;
-
+    /**
+     * @var Reporter\ReportsTests[]
+     */
+    protected $reporters;
+    /**
+     * @var [string => string] Mapping of actual paths back to template paths.
+     */
     protected $convertedPaths;
+    /**
+     * @var bool Whether or not finalise has been called.
+     */
+    protected $isFinalised;
+    /**
+     * @var bool Whether or not to generate an exception if the response was empty. Default is false, because empty responses are valid.
+     */
+    protected $errorOnEmpty;
 
     public function __construct()
     {
         $this->convertedPaths = [];
+        $this->reporters = [];
+        $this->isFinalised = false;
+        $this->errorOnEmpty = false;
     }
 
     public static function Create()
@@ -62,8 +79,29 @@ class SwaggerSchema
         $HandlesPath = $this->getPathHandlerLoader()->getHandler($templatePath);
         $actualPath = $HandlesPath->convertPath($templatePath);
         $this->convertedPaths[$actualPath] = $templatePath;
-        $this->getPathHandlerLoader()->unloadHandlers();
         return $actualPath;
+    }
+
+    public function getConvertedPath($path, $convertIt = false)
+    {
+        if (isset($this->convertedPaths[$path])) {
+            //Is the converted path.
+            return $path;
+        }
+
+        $key = array_search($path, $this->convertedPaths, true);
+        if ($key !== false) {
+            //$path is the template path, so return the converted path
+            return $key;
+        }
+
+        if ($convertIt) {
+            //We don't have it... yet.
+            return $this->convertPath($path);
+        }
+
+        //We don't have it.
+        return null;
     }
 
     /**
@@ -75,20 +113,25 @@ class SwaggerSchema
     public function testPath($path, $method = 'get', $expectedStatusCode = 200)
     {
         //Check whether it's a template path or one which has been previously converted into an actual path.
-        if (!isset($this->convertedPaths[$path])) {
-            $actualPath = $this->convertPath($path);
-            $templatePath = $path;
-        } else {
-            $actualPath = $path;
-            $templatePath = $this->convertedPaths[$actualPath];
-        }
+        $actualPath = $this->getConvertedPath($path, true);
+        $templatePath = $this->getTemplatePath($path);
 
-        $json = $this->getURLRetriever()->request($this->getURL() . $actualPath);
+        $this->logDetail('Path', $templatePath);
+
+        $url = $this->getURL() . $actualPath;
+        $this->logDetail('URL', $url);
+
+        $json = $this->getURLRetriever()->request($url);
+        $this->logDetail('Response', $json);
+
+        if (empty($json) && $this->getErrorOnEmpty()) {
+            throw new Exception\ResponseEmptyException(sprintf('URL %1$s returned no data.', $url));
+        }
 
         (new Validator\Validator())
             ->validate($this->schema->paths->$templatePath->$method->responses->$expectedStatusCode->schema, $json);
     }
-    
+
     /**
      * Checks whether the path should be included, based on the previously specified filters.
      *
@@ -101,7 +144,7 @@ class SwaggerSchema
         if (empty($this->filters)) {
             return true;
         }
-        
+
         //Match either with or without braces.
         $cleanPath = str_replace(array('{', '}'), array('', ''), $path);
         foreach ($this->filters as $filter) {
@@ -137,9 +180,29 @@ class SwaggerSchema
                         continue;
                     }
 
-                    $pathList[] = $this->convertPath($path);
+                    $pathList[] = $path;
                 }
             }
+        }
+
+        if (empty($pathList)) {
+            if (empty($this->schema->paths)) {
+                throw new Exception\ConfigurationException('The specified schema does not have any paths to test.');
+            }
+            $filters = !empty($this->filters) ? PHP_EOL . 'Filters:' . PHP_EOL . implode(PHP_EOL, $this->filters) : '';
+            //$methods = !empty($this->methods) ? PHP_EOL . 'Methods:' . PHP_EOL . implode(PHP_EOL, $this->methods) : '';
+
+            throw new Exception\ConfigurationException('Could not load any paths to test. Please check your filtering settings.' . $filters);
+        }
+
+        return $pathList;
+    }
+
+    public function convertPaths()
+    {
+        $pathList = [];
+        foreach ($this->getPaths() as $path) {
+            $pathList[] = $this->convertPath($path);
         }
         return $pathList;
     }
@@ -313,10 +376,108 @@ class SwaggerSchema
     {
         $this->pathHandlerLoader = new \Swagception\PathHandlerLoader\PathHandlerLoader($this);
     }
-    
+
     public function withFilters($filters)
     {
         $this->filters = $filters;
         return $this;
+    }
+
+    public function withAddedReporter(Reporter\ReportsTests $reporter)
+    {
+        $this->reporters[] = $reporter;
+        return $this;
+    }
+
+    public function getReporters()
+    {
+        return $this->reporters;
+    }
+    
+    public function getErrorOnEmpty()
+    {
+        return $this->errorOnEmpty;
+    }
+    
+    public function withErrorOnEmpty($errorOnEmpty)
+    {
+        $this->errorOnEmpty = $errorOnEmpty;
+        return $this;
+    }
+
+    public function logResult($result)
+    {
+        if (!empty($this->getReporters())) {
+            foreach ($this->getReporters() as $Reporter) {
+                $Reporter->logResult($result);
+            }
+        }
+    }
+
+    public function logDetail($header, $message)
+    {
+        if (!empty($this->getReporters())) {
+            foreach ($this->getReporters() as $Reporter) {
+                $Reporter->logDetail($header, $message);
+            }
+        }
+    }
+
+    public function setCurrentTest($test, $data = null)
+    {
+        if (!empty($this->getReporters())) {
+            foreach ($this->getReporters() as $Reporter) {
+                $Reporter->setCurrentTest($test, $data);
+            }
+        }
+    }
+
+    public function setCurrentTestName($name)
+    {
+        if (!empty($this->getReporters())) {
+            foreach ($this->getReporters() as $Reporter) {
+                $Reporter->setCurrentTestName($name);
+            }
+        }
+    }
+
+    public function setMiscInfo()
+    {
+        if (!empty($this->getReporters())) {
+            foreach ($this->getReporters() as $Reporter) {
+                $Reporter->setMiscInfo();
+            }
+        }
+    }
+
+    public function logException(\Exception $e)
+    {
+        if (!empty($this->getReporters())) {
+            foreach ($this->getReporters() as $Reporter) {
+                $Reporter->logException($e);
+            }
+        }
+    }
+
+    public function finalise()
+    {
+        if (!$this->isFinalised) {
+            $this->setMiscInfo();
+
+            //Unload handlers first, in case the unloading generates additional errors.
+            $this->getPathHandlerLoader()->unloadHandlers();
+
+            if (!empty($this->getReporters())) {
+                foreach ($this->getReporters() as $Reporter) {
+                    $Reporter->finalise();
+                }
+            }
+            $this->isFinalised = true;
+        }
+    }
+
+    public function isFinalised()
+    {
+        return $this->isFinalised;
     }
 }

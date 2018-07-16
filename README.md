@@ -63,13 +63,23 @@ class MyPathHandler implements \Swagception\PathHandler\HandlesPath
 }
 ```
 
+## Swagception extension
+Now that you have some real data at your disposal, it's time to configure your codeception environment for Swagception.
+You only need to set up one extension. More information about codeception extensions is available [here](https://codeception.com/docs/08-Customization#Extension).
+Put the following in your codeception.yml or suite.yml file:
+```yaml
+extensions:
+  enabled:
+    - \Swagception\Extension\Swagception
+```
+
 ## Cest structure
-Now that you have some real data at your disposal, it's time to link it all together in your Codeception cest.
+With the full functionality of Swagception enabled, it's time to link everything together in your Codeception cest. 
 The recommended way is to feed the paths (end points) into a cest data provider. Your terminal will then output a line for each path.
 ```php
 class MyCest
 {
-    protected $swaggerSchema;
+    use \Swagception\Schema;
 
     public function __construct()
     {
