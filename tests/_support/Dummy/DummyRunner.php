@@ -1,7 +1,7 @@
 <?php
 namespace tests\Dummy;
 
-class DummyURLRetriever implements \Swagception\URLRetriever\CanRetrieveURLs
+class DummyRunner implements \Swagception\Request\Runner\RunsRequests
 {
     protected $responses;
     
@@ -20,10 +20,11 @@ class DummyURLRetriever implements \Swagception\URLRetriever\CanRetrieveURLs
         }
     }
     
-    public function request($url, $method = 'get')
+    public function run(\Psr\Http\Message\RequestInterface $request, $allowError = false)
     {
-        if (isset($this->responses[$url])) {
-            return $this->responses[$url];
+        $uri = (string)$request->getUri();
+        if (isset($this->responses[$uri])) {
+            return new \GuzzleHttp\Psr7\Response(200, [], json_encode($this->responses[$uri]));
         }
         return null;
     }

@@ -80,7 +80,11 @@ class ObjectValidator implements CanValidate
             //By default, and if true, we allow all additional properties
         } elseif ($schema->additionalProperties === false) {
             //We don't allow additional properties. Check whether there are extra fields we weren't expecting.
-            $extraFields = array_diff(array_keys(get_object_vars($json)), array_keys(get_object_vars($schema->properties)));
+            if (isset($schema->properties)) {
+                $extraFields = array_diff(array_keys(get_object_vars($json)), array_keys(get_object_vars($schema->properties)));
+            } else {
+                $extraFields = array_keys(get_object_vars($json));
+            }
             if (!empty($extraFields)) {
                 throw new Exception\ValidationException(sprintf('%1$s has unexpected extra fields: "%2$s".', $context, implode('", "', $extraFields)));
             }

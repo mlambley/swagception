@@ -83,7 +83,7 @@ class NumberBase
             }
         }
     }
-    
+
     protected function isNumeric($val)
     {
         //Can't just use is_numeric because that matches strings.

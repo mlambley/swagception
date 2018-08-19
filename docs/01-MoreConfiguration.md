@@ -4,7 +4,7 @@
 You can customise the default objects loaded by Swagception.
 
 ```php
-$this->swaggerSchema
+$this->swaggerContainer->getSchema()
     //Specify your own schema, instead of loading from a file using withSchemaURI
     ->withSchema($otherSchema)
 
@@ -24,18 +24,14 @@ $this->swaggerSchema
         (new \Swagception\Reporter\HTMLReporter())
             ->withFileName(codecept_output_dir() . '/MyReport.html')
     )
-
-    //Specify your own URL retriever which implements \Swagception\URLRetriever\CanRetrieveURLs
-    ->withURLRetriever($myURLRetriever)
-
-    //Specify your own path handler which implements \Swagception\PathHandlerLoader\LoadsPathHandlers
-    ->withPathHandlerLoader($myURLRetriever)
 ;
 
-$this->swaggerSchema->getPathHandlerLoader()
+$this->swaggerContainer->getPathHandlerLoader()
     //Tell the system to not fall back to enum and x-example to generate URIs
     ->useDefaultPathHandler(false)
+;
 
+$this->swaggerContainer->getHandlerContainer()
     //Configure your path handlers by calling a closure each time one is generated.
     ->onHandlerLoad(function($PathHandler) use ($ExtraVariable) {
         $PathHandler->setExtraVariable($ExtraVariable);
@@ -48,13 +44,14 @@ $this->swaggerSchema->getPathHandlerLoader()
     })
 ;
 
-//Configure the URL Retriever. It is a \GuzzleHttp\Client unless you have overridden it.
-$this->swaggerSchema->getURLRetriever()
+$this->swaggerContainer->getRequestRunner()
     //Set GuzzleHttp constructor args. This example turns off ssl verification.
     ->withArgs(['verify' => false])
+;
 
-    //Set GuzzleHttp request options. This example sets headers.
-    ->withOptions([
+$this->swaggerContainer->getRequestGenerator()
+    //Set headers to be sent with every API request.
+    ->withStandardHeaders([
         'headers' => [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
@@ -72,5 +69,5 @@ If you do not use reporters, and you do not require your path handlers to be unl
 ## Override any class
 Swagception is designed such that any core class can be replaced with one which implements the corresponding interface. 
 Path handler loader, for example, can be replaced with anything which implements `\Swagception\PathHandlerLoader\LoadsPathHandlers`
-by either calling `$SwaggerSchema->withPathHandlerLoader` or by overriding `loadDefaultPathHandlerLoader`.
+by either calling `$container->withPathHandlerLoader` or by overriding `loadDefaultPathHandlerLoader`.
 If you come across a class which cannot be customised, or you are in any way limited by the functionality provided here, please log me a ticket.

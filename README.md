@@ -3,7 +3,7 @@ Validate your API against Swagger 2.0 using Codeception
 
 ## How to Install
 ```
-composer require --dev mlambley/swagception
+composer require --dev mlambley/swagception:0.0.1-alpha.6
 ```
 
 ## What is Swagger?
@@ -79,18 +79,20 @@ The recommended way is to feed the paths (end points) into a cest data provider.
 ```php
 class MyCest
 {
-    use \Swagception\Schema;
+    use \Swagception\ContainerTrait;
 
     public function __construct()
     {
         //Configure the swagger schema object.
-        $this->swaggerSchema = \Swagception\SwaggerSchema::Create()
+        $this->swaggerContainer = new \Swagception\Container\Container();
+
+        $this->swaggerContainer->getSchema()
             //Path to your existing Swagger specification
             ->withSchemaURI('/path/to/swagger.json')
         ;
 
         //Configure the path handler loader.
-        $this->swaggerSchema->getPathHandlerLoader()
+        $this->swaggerContainer->getPathHandlerLoader()
             //Set this if you are using your own path handlers, and not relying upon enum and x-example.
             ->withNamespace('My\\API\\PathHandlers')
 
@@ -105,7 +107,7 @@ class MyCest
     public function path(MyTester $I, \Codeception\Scenario $S, \Codeception\Example $data)
     {
         $path = $data[0];
-        $this->swaggerSchema->testPath($path);
+        $this->swaggerContainer->getSchema()->testPath($path);
     }
 
     protected function _pathProvider()
@@ -113,7 +115,7 @@ class MyCest
         //Will return an array of arrays.
         return array_map(function($val) {
             return [$val];
-        }, $this->swaggerSchema->getPaths());
+        }, $this->swaggerContainer->getSchema()->getPaths());
     }
 }
 ```
@@ -122,8 +124,9 @@ Alternatively, you can loop through them in a single function.
 ```php
 public function paths(MyTester $I, \Codeception\Scenario $S)
 {
-    foreach ($this->swaggerSchema->getPaths() as $path) {
-        $this->swaggerSchema->testPath($path);
+    $schema = $this->swaggerContainer->getSchema(); 
+    foreach ($schema->getPaths() as $path) {
+        $schema->testPath($path);
     }
 }
 ```
@@ -135,10 +138,7 @@ Or, if you already have the json and the schema objects, you can call the valida
 ```
 
 ## More settings
-See more [configuration options](/docs/01-MoreConfiguration.md).
+See more [configuration options](docs/01-MoreConfiguration.md).
 
-## Did this library work for you?
-Show your support by starring this project at [Github](https://github.com/mlambley/swagception/)
-
-## Did this library not work for you?
-Log me a [github issue](https://github.com/mlambley/swagception/issues) detailing how it didn't work for you. Your assistance is appreciated.
+## Issues?
+Log a [github issue](https://github.com/mlambley/swagception/issues). Your assistance is appreciated.

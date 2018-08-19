@@ -3,23 +3,26 @@ namespace Swagception\PathHandler;
 
 class DefaultPathHandler implements HandlesPath
 {
-    protected $schema;
-    
-    public function __construct($schema)
+    /**
+     * @var \Swagception\Container\ContainsInstances
+     */
+    protected $container;
+
+    public function __construct($container)
     {
-        $this->schema = $schema;
+        $this->container = $container;
     }
 
     public function convertPath($path)
     {
-        if (!isset($this->schema) || !isset($this->schema->paths->$path) || !isset($this->schema->paths->$path->get) || !isset($this->schema->paths->$path->get->parameters)) {
+        if (empty($this->container->getSchema()) || !isset($this->container->getSchema()->paths->$path) || !isset($this->container->getSchema()->paths->$path->get) || !isset($this->container->getSchema()->paths->$path->get->parameters)) {
             //Could not find a get request at this path.
             return $path;
         }
-        
+
         //Check enum and x-example
         $paramValues = array();
-        foreach ($this->schema->paths->$path->get->parameters as $param) {
+        foreach ($this->container->getSchema()->paths->$path->get->parameters as $param) {
             if ($param->in !== 'path') {
                 //We're only parsing path parameters in this function.
                 continue;

@@ -8,6 +8,10 @@ use JsonSchema\Uri\UriResolver;
 class SwaggerSchema implements Reporter\ReportsTests
 {
     /**
+     * @var Container\ContainsInstances
+     */
+    protected $container;
+    /**
      * @var object The Swagger 2.0 json schema.
      */
     protected $schema;
@@ -23,14 +27,6 @@ class SwaggerSchema implements Reporter\ReportsTests
      * @var string API base path eg. /api
      */
     protected $basePath;
-    /**
-     * @var \Swagception\PathHandlerLoader\LoadsPathHandlers
-     */
-    protected $pathHandlerLoader;
-    /**
-     * @var \Swagception\URLRetriever\CanRetrieveURLs
-     */
-    protected $urlRetriever;
     /**
      * @var string[] Only match routes containing at least one of these.
      */
@@ -52,17 +48,36 @@ class SwaggerSchema implements Reporter\ReportsTests
      */
     protected $errorOnEmpty;
 
-    public function __construct()
+    public function __construct(Container\ContainsInstances $container)
     {
+        $this->withContainer($container);
         $this->convertedPaths = [];
         $this->reporters = [];
         $this->isFinalised = false;
         $this->errorOnEmpty = false;
     }
 
-    public static function Create()
+    /**
+     * @return Container\ContainsInstances
+     */
+    public function getContainer()
     {
-        return new static();
+        return $this->container;
+    }
+
+    /**
+     * @param Container\ContainsInstances $container
+     * @return static
+     */
+    public function withContainer(Container\ContainsInstances $container)
+    {
+        $this->container = $container;
+        return $this;
+    }
+
+    public static function Create(Container\ContainsInstances $container)
+    {
+        return new static($container);
     }
 
     public function getTemplatePath($path)
@@ -76,7 +91,7 @@ class SwaggerSchema implements Reporter\ReportsTests
 
     public function convertPath($templatePath)
     {
-        $HandlesPath = $this->getPathHandlerLoader()->getHandler($templatePath);
+        $HandlesPath = $this->getContainer()->getPathHandlerLoader()->getHandler($templatePath);
         $actualPath = $HandlesPath->convertPath($templatePath);
         $this->convertedPaths[$actualPath] = $templatePath;
         return $actualPath;
@@ -115,20 +130,19 @@ class SwaggerSchema implements Reporter\ReportsTests
         //Check whether it's a template path or one which has been previously converted into an actual path.
         $actualPath = $this->getConvertedPath($path, true);
         $templatePath = $this->getTemplatePath($path);
-
         $this->logDetail('Path', $templatePath);
 
-        $url = $this->getURL() . $actualPath;
-        $this->logDetail('URL', $url);
+        $uri = $this->getBaseURL() . $actualPath;
+        $this->logDetail('URL', $uri);
 
-        $json = $this->getURLRetriever()->request($url);
+        $json = $this->runRequest($uri, $method);
         $this->logDetail('Response', $json);
 
         if (empty($json) && $this->getErrorOnEmpty()) {
-            throw new Exception\ResponseEmptyException(sprintf('URL %1$s returned no data.', $url));
+            throw new Exception\ResponseEmptyException(sprintf('URI %1$s returned no data.', $uri));
         }
 
-        (new Validator\Validator())
+        $this->getContainer()->getValidator()
             ->validate($this->schema->paths->$templatePath->$method->responses->$expectedStatusCode->schema, $json);
     }
 
@@ -148,7 +162,7 @@ class SwaggerSchema implements Reporter\ReportsTests
         //Match either with or without braces.
         $cleanPath = str_replace(array('{', '}'), array('', ''), $path);
         foreach ($this->filters as $filter) {
-            if (strpos($path, $filter) !== false || strpos($cleanPath, $filter) !== false) {
+            if (stripos($path, $filter) !== false || stripos($cleanPath, $filter) !== false) {
                 return true;
             }
         }
@@ -164,7 +178,7 @@ class SwaggerSchema implements Reporter\ReportsTests
         return $this->schema->$key;
     }
 
-    public function getURL()
+    public function getBaseURL()
     {
         return $this->getScheme() . '://' . $this->getHost() . $this->getBasePath();
     }
@@ -174,9 +188,9 @@ class SwaggerSchema implements Reporter\ReportsTests
         $pathList = [];
         foreach ($this->schema->paths as $path => $pathData) {
             if ($this->checkFilter($path)) {
-                foreach (array_keys(get_object_vars($pathData)) as $action) {
+                foreach (array_keys(get_object_vars($pathData)) as $method) {
                     //We only check get requests here.
-                    if ($action !== 'get') {
+                    if ($method !== 'get') {
                         continue;
                     }
 
@@ -339,44 +353,6 @@ class SwaggerSchema implements Reporter\ReportsTests
         return $refResolver->resolveRef($specURI);
     }
 
-    public function getURLRetriever()
-    {
-        if (!isset($this->urlRetriever)) {
-            $this->loadDefaultURLRetriever();
-        }
-        return $this->urlRetriever;
-    }
-
-    public function withURLRetriever(\Swagception\URLRetriever\CanRetrieveURLs $urlRetriever)
-    {
-        $this->urlRetriever = $urlRetriever;
-        return $this;
-    }
-
-    protected function loadDefaultURLRetriever()
-    {
-        $this->urlRetriever = new \Swagception\URLRetriever\URLRetriever();
-    }
-
-    public function getPathHandlerLoader()
-    {
-        if (!isset($this->pathHandlerLoader)) {
-            $this->loadDefaultPathHandlerLoader();
-        }
-        return $this->pathHandlerLoader;
-    }
-
-    public function withPathHandlerLoader(\Swagception\PathHandlerLoader\LoadsPathHandlers $pathHandlerLoader)
-    {
-        $this->pathHandlerLoader = $pathHandlerLoader;
-        return $this;
-    }
-
-    protected function loadDefaultPathHandlerLoader()
-    {
-        $this->pathHandlerLoader = new \Swagception\PathHandlerLoader\PathHandlerLoader($this);
-    }
-
     public function withFilters($filters)
     {
         $this->filters = $filters;
@@ -393,12 +369,12 @@ class SwaggerSchema implements Reporter\ReportsTests
     {
         return $this->reporters;
     }
-    
+
     public function getErrorOnEmpty()
     {
         return $this->errorOnEmpty;
     }
-    
+
     public function withErrorOnEmpty($errorOnEmpty)
     {
         $this->errorOnEmpty = $errorOnEmpty;
@@ -465,7 +441,7 @@ class SwaggerSchema implements Reporter\ReportsTests
             $this->setMiscInfo();
 
             //Unload handlers first, in case the unloading generates additional errors.
-            $this->getPathHandlerLoader()->unloadHandlers();
+            $this->getContainer()->getHandlerContainer()->unload();
 
             if (!empty($this->getReporters())) {
                 foreach ($this->getReporters() as $Reporter) {
@@ -479,5 +455,12 @@ class SwaggerSchema implements Reporter\ReportsTests
     public function isFinalised()
     {
         return $this->isFinalised;
+    }
+
+    protected function runRequest($uri, $method)
+    {
+        $request = $this->getContainer()->getRequestGenerator()->generate($uri, $method);
+        $response = $this->getContainer()->getRequestRunner()->run($request);
+        return json_decode((string)$response->getBody());
     }
 }

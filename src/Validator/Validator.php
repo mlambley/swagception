@@ -45,7 +45,7 @@ class Validator implements CanValidate
             $this->validateDefinitions($schema, $json, $context);
         }
     }
-    
+
     /**
      * @param object $schema
      * @param object $json
@@ -179,7 +179,7 @@ class Validator implements CanValidate
     {
         //This keyword's value MUST be an object. This object MUST be a valid JSON Schema.
         //An instance is valid against this keyword if it fails to validate successfully against the schema defined by this keyword.
-        
+
         try {
             (new Validator())
                 ->validate($schema->not, $json, $context);
@@ -187,7 +187,7 @@ class Validator implements CanValidate
             //If you try to fail and succeed, which have you done?
             return;
         }
-        
+
         throw new Exception\ValidationException(sprintf('%1$s successfully passed the specified \'not\' schema.', $context));
     }
 

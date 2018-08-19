@@ -11,41 +11,22 @@ use Swagception\Exception;
 class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
 {
     /**
-     * @var \Swagception\SwaggerSchema Reference back to the schema object. Needed for the default path handler.
+     * @var \Swagception\Container\ContainsInstances Reference back to the schema object, and all other objects in the container.
      */
-    protected $swaggerSchema;
+    protected $container;
     /**
      * @var string[] We link paths to classes via annotations. These are the annotation keys we search for.
      */
     protected $annotationKeys;
     /**
-     * @var [string => [string => HandlesPath]] The handler cache, indexed by both path and class name.
-     */
-    protected $handlers;
-    /**
-     * @var closure[] These are applied to each custom path handler as it's created. Use this to configure the handlers.
-     */
-    protected $onHandlerLoad;
-    /**
-     * @var closure[] These are applied to each custom path handler as it's destroyed. Clean up any temporary data you've created here.
-     */
-    protected $onHandlerUnload;
-    /**
      * @var bool Whether we use the default path handler (which fetches enum and x-example for parameters) or whether we're always going to use our own path handler classes.
      */
     protected $useDefaultPathHandler;
-    /**
-     * @var string Which path we are currently testing. This is the first index of $this->handlers
-     */
-    protected $currentPath;
 
-    public function __construct($swaggerSchema)
+    public function __construct($container)
     {
-        $this->swaggerSchema = $swaggerSchema;
+        $this->container = $container;
         $this->loadAnnotationKeys();
-        $this->handlers = [];
-        $this->onHandlerLoad = [];
-        $this->onHandlerUnload = [];
         $this->handledPaths = [];
         $this->useDefaultPathHandler = true;
     }
@@ -57,26 +38,6 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
     public function withAnnotationKeys($annotationKeys)
     {
         $this->annotationKeys = $annotationKeys;
-        return $this;
-    }
-
-    /**
-     * @param closure $closure
-     * @return static
-     */
-    public function onHandlerLoad($closure)
-    {
-        $this->onHandlerLoad[] = $closure;
-        return $this;
-    }
-
-    /**
-     * @param closure $closure
-     * @return static
-     */
-    public function onHandlerUnload($closure)
-    {
-        $this->onHandlerUnload[] = $closure;
         return $this;
     }
 
@@ -96,7 +57,6 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
      */
     public function getHandler($path)
     {
-        $this->setCurrentPath($path);
         $handlerClassName = $this->getClass($path);
         if (empty($handlerClassName)) {
             if (!$this->useDefaultPathHandler) {
@@ -105,65 +65,8 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
             //Don't need to cache the default path handler.
             return $this->getDefaultPathHandler();
         } else {
-            return $this->getHandlerFromClass($handlerClassName);
+            return $this->container->getHandlerContainer()->get($handlerClassName);
         }
-    }
-
-    /**
-     * @param string $handlerClassName
-     * @return HandlesPath
-     */
-    public function getHandlerFromClass($handlerClassName, $forceCreate = false)
-    {
-        if ($forceCreate) {
-            $key = null;
-            $cntr = 0;
-            while ($key === null || isset($this->handlers[$this->currentPath][$key])) {
-                $key = $this->getRandomString($handlerClassName);
-                $cntr++;
-                if ($cntr > 1000) {
-                    //Not sure how this could happen, but better to check.
-                    throw new \Exception(sprintf('Could not generate a unique key for handler %1$s', $handlerClassName));
-                }
-            }
-            $this->handlers[$this->currentPath][$key] = $this->getCustomPathHandler($handlerClassName);
-            return $this->handlers[$this->currentPath][$key];
-        }
-
-        //Look up handler from cache, and create if it doesn't exist.
-        if (!isset($this->handlers[$this->currentPath][$handlerClassName])) {
-            $this->handlers[$this->currentPath][$handlerClassName] = $this->getCustomPathHandler($handlerClassName);
-        }
-        return $this->handlers[$this->currentPath][$handlerClassName];
-    }
-
-    protected function getRandomString($beginningWith)
-    {
-        //Doesn't need to be secure. Just needs to be unique.
-        return $beginningWith . md5(microtime(true));
-    }
-
-    /**
-     * @return static
-     */
-    public function unloadHandlers($path = null)
-    {
-        if ($path !== null) {
-            if (isset($this->handlers[$path])) {
-                $this->setCurrentPath($path);
-                foreach ($this->handlers[$path] as $Handler) {
-                    foreach ($this->onHandlerUnload as $closure) {
-                        $closure($Handler);
-                    }
-                }
-                unset($this->handlers[$path]);
-            }
-        } else {
-            foreach (array_keys($this->handlers) as $path) {
-                $this->unloadHandlers($path);
-            }
-        }
-        return $this;
     }
 
     public function getHandledPaths()
@@ -174,26 +77,7 @@ class PathHandlerLoader extends AnnotationHelper implements LoadsPathHandlers
 
     protected function getDefaultPathHandler()
     {
-        return (new \Swagception\PathHandler\DefaultPathHandler($this->swaggerSchema));
-    }
-
-    protected function getCustomPathHandler($handlerClassName)
-    {
-        $PathHandler = new $handlerClassName();
-        foreach ($this->onHandlerLoad as $closure) {
-            $closure($PathHandler);
-        }
-        return $PathHandler;
-    }
-
-    public function getCurrentPath()
-    {
-        return $this->currentPath;
-    }
-
-    protected function setCurrentPath($path)
-    {
-        $this->currentPath = $path;
+        return (new \Swagception\PathHandler\DefaultPathHandler($this->container));
     }
 
     protected function loadAnnotationKeys()

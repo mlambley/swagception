@@ -81,7 +81,7 @@ class Swagception extends \Codeception\Extension
         $tests = $e->getSuite()->tests();
         foreach ($tests as $test) {
             $SwaggerSchema = $this->getSwaggerSchema($test->getTestClass());
-            
+
             if (!empty($SwaggerSchema)) {
                 //Finalise may be called multiple times for each reporter, so the SwaggerSchema will need to be able to handle this.
                 $SwaggerSchema->finalise();
@@ -91,12 +91,16 @@ class Swagception extends \Codeception\Extension
 
     protected function getSwaggerSchema($cest)
     {
-        if (method_exists($cest, '_getSwaggerSchema')) {
-            $SwaggerSchema = $cest->_getSwaggerSchema();
-            
-            //It doesn't strictly need to be an instance of SwaggerSchema. We're only going to call the functions as defined in ReportsTests.
-            if ($SwaggerSchema instanceof \Swagception\Reporter\ReportsTests) {
-                return $SwaggerSchema;
+        if (method_exists($cest, '_getSwaggerContainer')) {
+            $Container = $cest->_getSwaggerContainer();
+
+            if ($Container instanceof \Swagception\Container\ContainsInstances) {
+                $SwaggerSchema = $Container->getSchema();
+
+                //It doesn't strictly need to be an instance of SwaggerSchema. We're only going to call the functions as defined in ReportsTests.
+                if ($SwaggerSchema instanceof \Swagception\Reporter\ReportsTests) {
+                    return $SwaggerSchema;
+                }
             }
         }
         return null;

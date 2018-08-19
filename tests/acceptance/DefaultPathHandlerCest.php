@@ -1,7 +1,18 @@
 <?php
 class DefaultPathHandlerCest
 {
-    protected $swaggerSchema;
+    use \Swagception\ContainerTrait;
+    
+    public function __construct()
+    {
+        $this->swaggerContainer = new \Swagception\Container\Container();
+
+        $this->swaggerContainer->getSchema()
+            ->withSchemaURI('file:///' . __DIR__ . '/../_support/Dummy/swagger.json')
+        ;
+        
+        $this->swaggerContainer->withRequestRunner(new tests\Dummy\DummyRunner());
+    }
     
     /**
      * @dataProvider _dataProvider
@@ -10,18 +21,13 @@ class DefaultPathHandlerCest
     {
         $path = $data[0];
         $I->wantTo('Default path handler: ' . $data[0]);
-        $this->swaggerSchema->testPath($path);
+        $this->swaggerContainer->getSchema()->testPath($path);
     }
     
     public function _dataProvider()
     {
-        $this->swaggerSchema = \Swagception\SwaggerSchema::Create()
-            ->withSchemaURI('file:///' . __DIR__ . '/../_support/Dummy/swagger.json')
-            ->withURLRetriever(new \tests\Dummy\DummyURLRetriever())
-        ;
-        
         return array_map(function ($val) {
             return [$val];
-        }, $this->swaggerSchema->getPaths());
+        }, $this->swaggerContainer->getSchema()->getPaths());
     }
 }
