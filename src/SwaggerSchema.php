@@ -143,7 +143,29 @@ class SwaggerSchema implements Reporter\ReportsTests
         }
 
         $this->getContainer()->getValidator()
-            ->validate($this->schema->paths->$templatePath->$method->responses->$expectedStatusCode->schema, $json);
+            ->validate($this->getResponseSchema($templatePath, $method, $expectedStatusCode), $json);
+    }
+
+    public function getResponseSchema($path, $method, $statusCode)
+    {
+        if (!isset($this->schema->paths->$path)) {
+            throw new \Exception(sprintf('Path %1$s not found', $path));
+        }
+
+        if (!isset($this->schema->paths->$path->$method)) {
+            throw new \Exception(sprintf('Method %1$s not found in path %2$s', $method, $path));
+        }
+
+        if (!isset($this->schema->paths->$path->$method->responses->$statusCode)) {
+            throw new \Exception(sprintf('Status code %1$s not found in path %2$s in method %3$s', $statusCode, $method, $path));
+        }
+
+        if (!isset($this->schema->paths->$path->$method->responses->$statusCode->schema)) {
+            //No response
+            return null;
+        }
+
+        return $this->schema->paths->$path->$method->responses->$statusCode->schema;
     }
 
     /**

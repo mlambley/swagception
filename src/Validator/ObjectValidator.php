@@ -77,7 +77,9 @@ class ObjectValidator implements CanValidate
     protected function validateAdditionalProperties($schema, $json, $context)
     {
         if (!isset($schema->additionalProperties) || $schema->additionalProperties === true) {
-            //By default, and if true, we allow all additional properties
+            //If true, we allow all additional properties.
+            //This is also the default behaviour for JSON schema and is unchanged by Swagger 2.0.
+            //See "By default any additional properties are allowed." in https://json-schema.org/understanding-json-schema/reference/object.html
         } elseif ($schema->additionalProperties === false) {
             //We don't allow additional properties. Check whether there are extra fields we weren't expecting.
             if (isset($schema->properties)) {

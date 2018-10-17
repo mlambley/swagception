@@ -11,6 +11,15 @@ class Validator implements CanValidate
 {
     public function validate($schema, $json, $context = 'Response')
     {
+        //If the schema is null, then only a null response is allowed.
+        if ($schema === null) {
+            if ($json !== null && $json != '') {
+                throw new Exception\ValidationException(sprintf('No schema was given, so only an empty response is allowed.', $context));
+            }
+
+            return;
+        }
+
         //If the json is null, then everything except type:null will fail, unless nullable is specified.
         $continueValidating = $this->validateNullable($schema, $json, $context);
         if (!$continueValidating) {
