@@ -37,8 +37,9 @@ interface ReportsTests
      *
      * @param string|null $header
      * @param string|null $message
+     * @param bool $preformatted Whether the formatting of the string should be preserved.
      */
-    public function logDetail($header, $message);
+    public function logDetail($header, $message, $preformatted = false);
     /**
      * Records that the current test has generated the provided exception.
      *

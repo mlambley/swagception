@@ -73,14 +73,13 @@ class HTMLReporter implements ReportsTests
         $this->getCurrentReportItem()->withTestName($name);
     }
 
-    public function logDetail($header, $message)
+    public function logDetail($header, $message, $preformatted = false)
     {
-        $this->logDetailRaw($header, $this->prettyPrint($message));
-    }
-
-    public function logDetailRaw($header, $message)
-    {
-        $this->getCurrentReportItem()->logDetail($header, $message);
+        if ($preformatted) {
+            $this->getCurrentReportItem()->logDetail($header, '<pre>' . $this->prettyPrint($message) . '</pre>');
+        } else {
+            $this->getCurrentReportItem()->logDetail($header, $this->prettyPrint($message));
+        }
     }
 
     public function logException(\Exception $e)
@@ -88,9 +87,9 @@ class HTMLReporter implements ReportsTests
         $this->logResult('Fail');
 
         if ($e instanceof \PHPUnit_Framework_ExceptionWrapper) {
-            $this->logDetailRaw('Exception', '<pre>' . $this->prettyPrint(''.$e) . '</pre>');
+            $this->getCurrentReportItem()->logDetail('Exception', '<pre>' . $this->prettyPrint(''.$e) . '</pre>');
         } else {
-            $this->logDetailRaw('Exception', '<pre>' . $this->prettyPrint(get_class($e) . "\n" . $e->getMessage() . "\n" . $e->getTraceAsString()) . '</pre>');
+            $this->getCurrentReportItem()->logDetail('Exception', '<pre>' . $this->prettyPrint(get_class($e) . "\n" . $e->getMessage() . "\n" . $e->getTraceAsString()) . '</pre>');
         }
     }
 
@@ -222,7 +221,7 @@ class HTMLReporter implements ReportsTests
         if (is_string($data)) {
             if (json_decode($data) === null) {
                 //Isn't json, so just return as is.
-                return htmlentities($data);
+                return $this->preserveSpaces(htmlentities($data));
             }
 
             //Is already a string but not pretty.
@@ -233,7 +232,7 @@ class HTMLReporter implements ReportsTests
             $json = json_encode($data, JSON_PRETTY_PRINT);
         } else {
             //Neither string nor object nor array, therefore not json.
-            return htmlentities($data);
+            return $this->preserveSpaces(htmlentities($data));
         }
 
         if ($json === false) {
@@ -265,5 +264,10 @@ class HTMLReporter implements ReportsTests
     {
         $this->miscTestName = $name;
         return $this;
+    }
+
+    protected function preserveSpaces($str)
+    {
+        return str_replace('  ', ' &nbsp;', $str);
     }
 }

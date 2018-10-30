@@ -412,11 +412,11 @@ class SwaggerSchema implements Reporter\ReportsTests
         }
     }
 
-    public function logDetail($header, $message)
+    public function logDetail($header, $message, $preformatted = false)
     {
         if (!empty($this->getReporters())) {
             foreach ($this->getReporters() as $Reporter) {
-                $Reporter->logDetail($header, $message);
+                $Reporter->logDetail($header, $message, $preformatted);
             }
         }
     }
