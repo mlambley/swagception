@@ -3,7 +3,7 @@ Validate your API against Swagger 2.0 using Codeception
 
 ## How to Install
 ```
-composer require --dev mlambley/swagception:0.0.1-alpha.6
+composer require --dev mlambley/swagception
 ```
 
 ## What is Swagger?
