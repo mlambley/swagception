@@ -16,11 +16,12 @@
         }
     },
     "require": {
-        "codeception/codeception": "^2.4",
+        "codeception/codeception": "^2.4 || ^3.0 || ^4.0",
         "zeptech/annotations": "^1.1",
         "justinrainbow/json-schema": "^5.2",
-        "guzzlehttp/guzzle": "^6.3",
-        "pimple/pimple": "^3.2"
+        "guzzlehttp/guzzle": "^6.3 || ^7.0",
+        "pimple/pimple": "^3.2",
+        "codeception/module-asserts": "^1.2"
     },
     "require-dev": {
         "codeception/aspect-mock": "^3.0",
