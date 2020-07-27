@@ -68,14 +68,19 @@ class Validator implements CanValidate
         //Otherwise the spec is plainly unworkable. You end up with hooks in odd places handling nullables in one of a million dodgy ways.
 
         //If we allow nullable, and the json is null or empty object, then pass.
-        if (isset($schema->nullable) && $schema->nullable === true) {
+        $nullable = 'x-nullable';
+        if (isset($schema->$nullable) && $schema->$nullable === true) {
+            if (($json === null) || (is_object($json) && empty(get_object_vars($json)))) {
+                return false;
+            }
+        } elseif (isset($schema->nullable) && $schema->nullable === true) {
             if (($json === null) || (is_object($json) && empty(get_object_vars($json)))) {
                 return false;
             }
         } elseif ($json === null) {
             //If nullable is not specified, only allow if type is null.
             if (!isset($schema->type) || $schema->type !== 'null') {
-                throw new Exception\ValidationException(sprintf('%1$s is null. Set type:null or nullable:true to allow null fields.', $context));
+                throw new Exception\ValidationException(sprintf('%1$s is null. Set type:null or x={"nullable":true} to allow null fields.', $context));
             }
         }
 
