@@ -49,8 +49,13 @@ class ObjectValidator implements CanValidate
 
     protected function validateRequired($schema, $json, $context)
     {
+        if (!isset($schema->required)) {
+            throw new Exception\ValidationException("required not set in " . json_encode($schema) . ' in ' . $context);
+        }
+
+
         //Check keys against required properties.
-        $missingFields = array();
+        $missingFields = [];
         foreach ($schema->required as $required) {
             if (!array_key_exists($required, get_object_vars($json))) {
                 $missingFields[] = $required;
@@ -76,6 +81,11 @@ class ObjectValidator implements CanValidate
 
     protected function validateAdditionalProperties($schema, $json, $context)
     {
+        if (!isset($schema->additionalProperties)) {
+            throw new Exception\ValidationException("additionalProperties not set in " . json_encode($schema) . ' in ' . $context);
+        }
+
+
         if (!isset($schema->additionalProperties) || $schema->additionalProperties === true) {
             //If true, we allow all additional properties.
             //This is also the default behaviour for JSON schema and is unchanged by Swagger 2.0.
